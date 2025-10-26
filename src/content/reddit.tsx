@@ -1,10 +1,20 @@
-// Content script for Reddit Draft Extension
-// This will be enhanced in Phase 2 with Shadow DOM sidebar
+import { createShadowDOMSidebar, mountReactApp } from '@/lib/shadow-dom/create-sidebar'
+import RedditSidebarApp from './sidebar/RedditSidebarApp'
+// Import CSS as string using Vite's ?inline modifier
+import styles from '@/globals.css?inline'
 
-console.log('[Reddit Drafter] Content script loaded on Reddit submit page')
+// Detect Reddit variant for logging
+function detectRedditVariant(): string {
+  const hostname = window.location.hostname
 
-// Phase 1: Just log that we're here
-// Phase 2: Will inject Shadow DOM sidebar with React app
+  if (hostname === 'old.reddit.com') return 'old'
+  if (hostname === 'sh.reddit.com') return 'sh'
+  if (hostname.includes('reddit.com')) return 'new'
+
+  return 'unknown'
+}
+
+// Main content script initialization
 ;(function initRedditDrafter() {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init)
@@ -13,19 +23,23 @@ console.log('[Reddit Drafter] Content script loaded on Reddit submit page')
   }
 
   function init() {
-    console.log('[Reddit Drafter] Initializing...')
+    const variant = detectRedditVariant()
+    console.log(`[Reddit Drafter] Initializing on ${variant} Reddit...`)
 
-    // Check what Reddit variant we're on
-    const hostname = window.location.hostname
-    let variant = 'unknown'
+    try {
+      // Create Shadow DOM sidebar
+      const { mountPoint } = createShadowDOMSidebar({
+        containerId: 'reddit-drafter-root',
+        appId: 'reddit-drafter-app',
+        styles // Pass CSS string directly
+      })
 
-    if (hostname === 'old.reddit.com') variant = 'old'
-    else if (hostname === 'sh.reddit.com') variant = 'sh'
-    else if (hostname.includes('reddit.com')) variant = 'new'
+      // Mount React app inside Shadow DOM
+      mountReactApp(mountPoint, RedditSidebarApp)
 
-    console.log(`[Reddit Drafter] Detected variant: ${variant}`)
-
-    // Phase 2 will create Shadow DOM sidebar here
-    // For now, just verify the content script is loading
+      console.log('[Reddit Drafter] Shadow DOM sidebar injected successfully!')
+    } catch (error) {
+      console.error('[Reddit Drafter] Failed to initialize:', error)
+    }
   }
 })()
