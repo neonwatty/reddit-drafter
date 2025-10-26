@@ -25,6 +25,8 @@ import { X } from 'lucide-react'
 import { updateDraft } from '@/lib/storage/drafts'
 import { validateDraft } from '@/lib/utils/validation'
 import { toast } from 'sonner'
+import MediaUploader from './MediaUploader'
+import MediaGallery from './MediaGallery'
 import type { RedditDraft } from '@/lib/types'
 
 interface DraftEditorProps {
@@ -121,9 +123,10 @@ export default function DraftEditor({
         </DialogHeader>
 
         <Tabs defaultValue="content" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="metadata">Metadata</TabsTrigger>
+            <TabsTrigger value="media">Media</TabsTrigger>
             <TabsTrigger value="organization">Organization</TabsTrigger>
           </TabsList>
 
@@ -265,6 +268,37 @@ export default function DraftEditor({
                 </div>
               </div>
             )}
+          </TabsContent>
+
+          {/* Media Tab */}
+          <TabsContent value="media" className="space-y-4">
+            {(formData.postType === 'image' ||
+              formData.postType === 'video' ||
+              formData.postType === 'gallery') && draft && (
+              <>
+                <MediaGallery draftId={draft.id} />
+                <MediaUploader
+                  draftId={draft.id}
+                  postType={formData.postType as 'image' | 'video' | 'gallery'}
+                  onMediaAdded={() => {
+                    // Refresh gallery
+                  }}
+                />
+              </>
+            )}
+
+            {formData.postType !== 'image' &&
+              formData.postType !== 'video' &&
+              formData.postType !== 'gallery' && (
+                <div className="p-6 text-center text-muted-foreground">
+                  <p className="text-sm">
+                    Media uploads are only available for Image, Video, and Gallery post types.
+                  </p>
+                  <p className="text-xs mt-2">
+                    Change the post type in the Content tab to enable media uploads.
+                  </p>
+                </div>
+              )}
           </TabsContent>
 
           {/* Organization Tab */}

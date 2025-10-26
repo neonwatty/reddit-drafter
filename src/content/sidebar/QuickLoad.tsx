@@ -22,6 +22,17 @@ export default function QuickLoad({ draft, onLoad }: QuickLoadProps) {
 
       if (result.success) {
         toast.success(`Draft "${draft.title}" loaded successfully!`)
+
+        // Show media warning if draft has attached media
+        if (result.hasMedia && result.mediaCount) {
+          setTimeout(() => {
+            toast.info(
+              `This draft has ${result.mediaCount} media file(s). You'll need to upload them manually to Reddit.`,
+              { duration: 5000 }
+            )
+          }, 500)
+        }
+
         onLoad?.(draft)
       } else if (result.error !== 'User cancelled') {
         toast.error(result.error || 'Failed to load draft')

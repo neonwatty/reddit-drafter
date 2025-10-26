@@ -12,6 +12,7 @@ import {
 import {
   checkSHRedditFormHasContent,
 } from './parsers/parse-sh'
+import { getMediaForDraft } from '../storage/media'
 
 /**
  * Load a draft into the Reddit form
@@ -20,8 +21,12 @@ import {
 export async function loadDraftIntoForm(
   draft: RedditDraft,
   skipWarning = false
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; hasMedia?: boolean; mediaCount?: number }> {
   const variant = detectRedditVariant()
+
+  // Check for attached media
+  const media = await getMediaForDraft(draft.id)
+  const hasMedia = media.length > 0
 
   // Check if form has content and warn user
   if (!skipWarning) {
@@ -39,15 +44,27 @@ export async function loadDraftIntoForm(
 
   // Load draft based on variant
   try {
+    let result: { success: boolean; error?: string }
+
     switch (variant) {
       case 'old':
-        return await populateOldRedditForm(draft)
+        result = await populateOldRedditForm(draft)
+        break
       case 'new':
-        return await populateNewRedditForm(draft)
+        result = await populateNewRedditForm(draft)
+        break
       case 'sh':
-        return await populateSHRedditForm(draft)
+        result = await populateSHRedditForm(draft)
+        break
       default:
         return { success: false, error: 'Unsupported Reddit variant' }
+    }
+
+    // Include media info in response
+    return {
+      ...result,
+      hasMedia,
+      mediaCount: media.length
     }
   } catch (error) {
     console.error('[loadDraftIntoForm] Error:', error)
