@@ -164,7 +164,7 @@ export default function DraftEditor({
                   setFormData({ ...formData, postType: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger id="postType">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
