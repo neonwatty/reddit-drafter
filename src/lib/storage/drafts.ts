@@ -28,6 +28,13 @@ export async function deleteDraft(id: string): Promise<void> {
   await db.drafts.delete(id)
 }
 
+export async function deleteAllDrafts(): Promise<void> {
+  // Delete all media first
+  await db.media.clear()
+  // Then delete all drafts
+  await db.drafts.clear()
+}
+
 export async function getDraft(id: string): Promise<RedditDraft | undefined> {
   return db.drafts.get(id)
 }
