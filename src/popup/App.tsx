@@ -36,6 +36,7 @@ import {
   exportDraftsToCSV,
   importDraftsFromFile,
 } from '@/lib/utils/export-import'
+import CommandPalette, { useCommandPalette, CommandIcons, type CommandAction } from '@/components/CommandPalette'
 import type { RedditDraft } from '@/lib/types'
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
   const [sortBy, setSortBy] = useState('newest')
   const [editingDraft, setEditingDraft] = useState<RedditDraft | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
+  const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette()
 
   // Initialize storage
   useEffect(() => {
@@ -223,6 +225,55 @@ function App() {
     }
   }
 
+  // Command Palette Actions
+  const commandActions: CommandAction[] = [
+    {
+      id: 'view-all',
+      label: 'View All Drafts',
+      icon: CommandIcons.draft,
+      shortcut: 'Alt+A',
+      onSelect: () => setActiveTab('all'),
+      group: 'Navigation',
+    },
+    {
+      id: 'view-favorites',
+      label: 'View Favorites',
+      icon: CommandIcons.favorite,
+      shortcut: 'Alt+F',
+      onSelect: () => setActiveTab('favorites'),
+      group: 'Navigation',
+    },
+    {
+      id: 'import',
+      label: 'Import Drafts from JSON',
+      icon: CommandIcons.import,
+      shortcut: 'Ctrl+I',
+      onSelect: handleImport,
+      group: 'Actions',
+    },
+    {
+      id: 'export-json',
+      label: 'Export All Drafts (JSON)',
+      icon: CommandIcons.export,
+      onSelect: handleExportAll,
+      group: 'Actions',
+    },
+    {
+      id: 'export-csv',
+      label: 'Export All Drafts (CSV)',
+      icon: CommandIcons.export,
+      onSelect: handleExportCSV,
+      group: 'Actions',
+    },
+    {
+      id: 'delete-all',
+      label: 'Delete All Drafts',
+      icon: CommandIcons.delete,
+      onSelect: handleDeleteAll,
+      group: 'Danger',
+    },
+  ]
+
   return (
     <div className="w-[400px] h-[600px] flex flex-col">
       {/* Header */}
@@ -331,6 +382,13 @@ function App() {
         open={editorOpen}
         onOpenChange={setEditorOpen}
         onSaved={loadDrafts}
+      />
+
+      {/* Command Palette */}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        actions={commandActions}
       />
 
       {/* Toaster */}
