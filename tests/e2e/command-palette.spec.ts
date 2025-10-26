@@ -149,16 +149,12 @@ test.describe('Command Palette', () => {
       // Press Enter to execute
       await page.keyboard.press('Enter')
 
-      // Should close palette and switch to Favorites tab
-      await page.waitForTimeout(500)
-
-      const palette = page.locator('[class*="command-palette"]')
-      const isVisible = await palette.isVisible().catch(() => false)
-      expect(isVisible).toBe(false)
+      // Wait for palette to close
+      await page.waitForSelector('.command-palette-overlay', { state: 'detached', timeout: 2000 })
 
       // Should be on Favorites tab (verify by checking active tab)
       const favoritesTab = page.locator('[role="tab"]:has-text("Favorites")')
-      await expect(favoritesTab).toHaveAttribute('aria-selected', 'true')
+      await expect(favoritesTab).toHaveAttribute('aria-selected', 'true', { timeout: 3000 })
     })
   })
 
