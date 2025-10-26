@@ -43,3 +43,7 @@ coverage/
 
 # OS files
 Thumbs.db
+
+# Playwright test artifacts
+test-results/
+playwright-report/

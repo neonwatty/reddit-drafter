@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Popup UI', () => {
   test('should display the popup with correct title', async ({ page }) => {
     // Navigate to the built popup HTML
-    await page.goto(`file://${process.cwd()}/dist/src/popup/index.html`)
+    await page.goto('/src/popup/index.html')
 
     // Wait for React to render
     await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
@@ -14,7 +14,7 @@ test.describe('Popup UI', () => {
   })
 
   test('should show tabs for All and Favorites', async ({ page }) => {
-    await page.goto(`file://${process.cwd()}/dist/src/popup/index.html`)
+    await page.goto('/src/popup/index.html')
     await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
 
     // Check tabs are present
@@ -23,7 +23,7 @@ test.describe('Popup UI', () => {
   })
 
   test('should display empty state when no drafts exist', async ({ page }) => {
-    await page.goto(`file://${process.cwd()}/dist/src/popup/index.html`)
+    await page.goto('/src/popup/index.html')
     await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
 
     // Wait for storage to initialize
@@ -35,7 +35,7 @@ test.describe('Popup UI', () => {
   })
 
   test('should have working search bar', async ({ page }) => {
-    await page.goto(`file://${process.cwd()}/dist/src/popup/index.html`)
+    await page.goto('/src/popup/index.html')
     await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
 
     // Find search input
@@ -48,7 +48,7 @@ test.describe('Popup UI', () => {
   })
 
   test('should have filter dropdowns', async ({ page }) => {
-    await page.goto(`file://${process.cwd()}/dist/src/popup/index.html`)
+    await page.goto('/src/popup/index.html')
     await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
 
     // Check for filter controls - use more specific selectors
@@ -57,7 +57,7 @@ test.describe('Popup UI', () => {
   })
 
   test('should display storage stats', async ({ page }) => {
-    await page.goto(`file://${process.cwd()}/dist/src/popup/index.html`)
+    await page.goto('/src/popup/index.html')
     await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
 
     // Wait for storage stats to load
@@ -69,7 +69,7 @@ test.describe('Popup UI', () => {
   })
 
   test('should have actions menu button', async ({ page }) => {
-    await page.goto(`file://${process.cwd()}/dist/src/popup/index.html`)
+    await page.goto('/src/popup/index.html')
     await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
 
     // Find the header actions menu button

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "fixture-draft-multi-1",
+    "createdAt": 1699900000000,
+    "updatedAt": 1699900000000,
+    "title": "First Multi-Import Draft",
+    "body": "First draft in batch import",
+    "subreddit": "test",
+    "postType": "text",
+    "nsfw": false,
+    "spoiler": false,
+    "oc": false,
+    "sendReplies": true,
+    "postToProfile": false,
+    "redditUsername": "multiuser",
+    "tags": ["batch", "import"],
+    "notes": "",
+    "favorite": false
+  },
+  {
+    "id": "fixture-draft-multi-2",
+    "createdAt": 1699900001000,
+    "updatedAt": 1699900001000,
+    "title": "Second Multi-Import Draft",
+    "body": "Second draft in batch import",
+    "subreddit": "test",
+    "postType": "link",
+    "link": "https://example.com",
+    "nsfw": false,
+    "spoiler": false,
+    "oc": false,
+    "sendReplies": true,
+    "postToProfile": false,
+    "redditUsername": "multiuser",
+    "tags": ["batch", "import"],
+    "notes": "",
+    "favorite": false
+  },
+  {
+    "id": "fixture-draft-multi-3",
+    "createdAt": 1699900002000,
+    "updatedAt": 1699900002000,
+    "title": "Third Multi-Import Draft",
+    "body": "",
+    "subreddit": "polls",
+    "postType": "poll",
+    "pollOptions": [
+      { "text": "Option A", "order": 0 },
+      { "text": "Option B", "order": 1 }
+    ],
+    "pollDuration": 3,
+    "nsfw": false,
+    "spoiler": false,
+    "oc": false,
+    "sendReplies": true,
+    "postToProfile": false,
+    "redditUsername": "multiuser",
+    "tags": ["batch", "import", "poll"],
+    "notes": "",
+    "favorite": true
+  }
+]

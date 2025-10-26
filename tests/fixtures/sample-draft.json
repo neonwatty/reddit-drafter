@@ -1,0 +1,18 @@
+{
+  "id": "fixture-draft-1",
+  "createdAt": 1699900000000,
+  "updatedAt": 1699900000000,
+  "title": "Sample Draft from JSON",
+  "body": "This is a sample draft imported from a JSON file.",
+  "subreddit": "samplesubreddit",
+  "postType": "text",
+  "nsfw": false,
+  "spoiler": false,
+  "oc": true,
+  "sendReplies": true,
+  "postToProfile": false,
+  "redditUsername": "sampleuser",
+  "tags": ["imported", "sample"],
+  "notes": "Sample notes from import",
+  "favorite": false
+}

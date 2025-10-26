@@ -41,6 +41,21 @@ export default function CommandPalette({
     }
   }, [open])
 
+  // Handle Escape key to close
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) {
+        e.preventDefault()
+        onOpenChange(false)
+      }
+    }
+
+    if (open) {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }
+  }, [open, onOpenChange])
+
   // Group actions
   const groupedActions = actions.reduce((acc, action) => {
     const group = action.group || 'General'
