@@ -391,7 +391,8 @@ test.describe('Draft Management', () => {
       confirmDialog(page)
 
       // Click menu and select Delete All
-      await page.locator('button[class*="ghost"]').first().click()
+      // Use the header menu button (there should be one visible button in the header)
+      await page.locator('button[aria-haspopup="menu"]').click()
       await page.waitForSelector('text=Delete All Drafts', { timeout: 2000 })
       await page.locator('text=Delete All Drafts').click()
 
