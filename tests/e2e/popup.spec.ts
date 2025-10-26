@@ -17,9 +17,9 @@ test.describe('Popup UI', () => {
     await page.goto('/src/popup/index.html')
     await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
 
-    // Check tabs are present
-    await expect(page.locator('text=All')).toBeVisible()
-    await expect(page.locator('text=Favorites')).toBeVisible()
+    // Check tabs are present - use role="tab" to avoid matching filter dropdown
+    await expect(page.locator('[role="tab"]', { hasText: 'All' })).toBeVisible()
+    await expect(page.locator('[role="tab"]', { hasText: 'Favorites' })).toBeVisible()
   })
 
   test('should display empty state when no drafts exist', async ({ page }) => {
