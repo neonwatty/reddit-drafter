@@ -107,8 +107,8 @@ test.describe('Command Palette', () => {
     test('should navigate commands with arrow keys', async ({ page }) => {
       await openCommandPalette(page)
 
-      // First item should be selected by default
-      const firstItem = page.locator('[class*="command-palette-item"]').first()
+      // First item should be selected by default (cmdk uses role="option")
+      const firstItem = page.locator('[role="option"]').first()
       await expect(firstItem).toHaveAttribute('aria-selected', 'true')
 
       // Navigate down
@@ -116,7 +116,7 @@ test.describe('Command Palette', () => {
       await page.waitForTimeout(100)
 
       // Second item should be selected
-      const secondItem = page.locator('[class*="command-palette-item"]').nth(1)
+      const secondItem = page.locator('[role="option"]').nth(1)
       await expect(secondItem).toHaveAttribute('aria-selected', 'true')
 
       // Navigate back up

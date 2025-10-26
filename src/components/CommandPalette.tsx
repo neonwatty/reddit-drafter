@@ -79,6 +79,7 @@ export default function CommandPalette({
               onValueChange={setSearch}
               placeholder="Type a command or search..."
               className="command-palette-input"
+              autoFocus
             />
           </div>
 
