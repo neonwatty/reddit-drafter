@@ -182,13 +182,13 @@ export async function clickDraftAction(
   const titleHeading = page.locator(`h3:has-text("${draftTitle}")`)
   await titleHeading.waitFor({ state: 'visible', timeout: 5000 })
 
-  // Navigate up to find the Card div (which has the menu button)
+  // Navigate up to find the Card div (which has p-4 class)
   // The structure is: Card > div.flex > div.flex-1 > div.flex > h3
-  // So we need to go up to the Card which contains both the content and the menu button
-  const draftCard = titleHeading.locator('xpath=ancestor::div[contains(@class, "rounded-lg")]').first()
+  const draftCard = titleHeading.locator('xpath=ancestor::div[contains(@class, "p-4")]').first()
 
-  // Find the menu button (MoreVertical icon button) within this card
-  const menuButton = draftCard.locator('button[class*="ghost"]').last()
+  // Find the dropdown menu trigger button within this card
+  // It's a button with size sm (h-8 w-8 p-0) that's a sibling to the content div
+  const menuButton = draftCard.locator('button').last()
   await menuButton.click()
 
   // Wait for menu to open
