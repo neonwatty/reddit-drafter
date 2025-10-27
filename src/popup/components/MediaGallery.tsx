@@ -138,6 +138,7 @@ function MediaItem({ media, onDelete }: MediaItemProps) {
             size="sm"
             className="h-6 w-6 p-0 flex-shrink-0"
             onClick={onDelete}
+            aria-label="Remove media"
           >
             <X className="h-3 w-3" />
           </Button>

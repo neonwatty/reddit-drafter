@@ -107,8 +107,9 @@ test.describe('Media Management', () => {
       expect(isVisible).toBe(false)
 
       // Change post type to Image
-      const postTypeSelect = page.locator('select#postType')
-      await postTypeSelect.selectOption('Image')
+      const postTypeSelect = page.locator('button#postType')
+      await postTypeSelect.click()
+      await page.locator('[role="option"]:has-text("Image")').click()
       await page.waitForTimeout(300)
 
       // Media tab should now be visible
@@ -130,7 +131,7 @@ test.describe('Media Management', () => {
 
       // Set up file chooser
       const fileChooserPromise = page.waitForEvent('filechooser')
-      await page.locator('button:has-text("Upload")').click()
+      await page.locator('button', { hasText: /Upload/i }).click()
 
       const fileChooser = await fileChooserPromise
 
@@ -164,7 +165,7 @@ test.describe('Media Management', () => {
 
       // Upload first image
       let fileChooserPromise = page.waitForEvent('filechooser')
-      await page.locator('button:has-text("Upload")').click()
+      await page.locator('button', { hasText: /Upload/i }).click()
 
       let fileChooser = await fileChooserPromise
       await fileChooser.setFiles({
@@ -177,7 +178,7 @@ test.describe('Media Management', () => {
 
       // Upload second image
       fileChooserPromise = page.waitForEvent('filechooser')
-      await page.locator('button:has-text("Upload")').click()
+      await page.locator('button', { hasText: /Upload/i }).click()
 
       fileChooser = await fileChooserPromise
       await fileChooser.setFiles({
@@ -206,7 +207,7 @@ test.describe('Media Management', () => {
       await page.locator('[role="tab"]:has-text("Media")').click()
 
       const fileChooserPromise = page.waitForEvent('filechooser')
-      await page.locator('button:has-text("Upload")').click()
+      await page.locator('button', { hasText: /Upload/i }).click()
 
       const fileChooser = await fileChooserPromise
       await fileChooser.setFiles({
@@ -274,7 +275,7 @@ test.describe('Media Management', () => {
       await page.locator('[role="tab"]:has-text("Media")').click()
 
       const fileChooserPromise = page.waitForEvent('filechooser')
-      await page.locator('button:has-text("Upload")').click()
+      await page.locator('button', { hasText: /Upload/i }).click()
 
       const fileChooser = await fileChooserPromise
 
@@ -305,7 +306,7 @@ test.describe('Media Management', () => {
       await page.locator('[role="tab"]:has-text("Media")').click()
 
       const fileChooserPromise = page.waitForEvent('filechooser')
-      await page.locator('button:has-text("Upload")').click()
+      await page.locator('button', { hasText: /Upload/i }).click()
 
       const fileChooser = await fileChooserPromise
 
@@ -396,7 +397,7 @@ test.describe('Media Management', () => {
 
       // Upload an image
       const fileChooserPromise = page.waitForEvent('filechooser')
-      await page.locator('button:has-text("Upload")').click()
+      await page.locator('button', { hasText: /Upload/i }).click()
 
       const fileChooser = await fileChooserPromise
       await fileChooser.setFiles({
