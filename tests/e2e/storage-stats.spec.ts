@@ -35,7 +35,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(1000)
 
       // Open menu to access storage stats
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -68,7 +68,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(1000)
 
       // Open storage stats
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -90,7 +90,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(1000)
 
       // Open storage stats
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -111,7 +111,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(1000)
 
       // Open storage stats
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -125,7 +125,7 @@ test.describe('Storage Stats', () => {
   test.describe('Storage Updates', () => {
     test('should update stats when drafts are added', async ({ page }) => {
       // Start with no drafts
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -146,7 +146,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(1000)
 
       // Check stats again
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -166,7 +166,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(1000)
 
       // Get storage stats before deletion
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -184,7 +184,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(500)
 
       // Check stats again
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -216,7 +216,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(1000)
 
       // Open storage stats
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -253,7 +253,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(1000)
 
       // Open storage stats
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -272,7 +272,7 @@ test.describe('Storage Stats', () => {
   test.describe('Empty State', () => {
     test('should show minimal storage usage with no drafts', async ({ page }) => {
       // No drafts added
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -296,7 +296,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(1000)
 
       // Open storage stats
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
@@ -323,7 +323,7 @@ test.describe('Storage Stats', () => {
       await page.waitForTimeout(1000)
 
       // Open storage stats
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Storage Stats', { timeout: 2000 })
       await page.locator('text=Storage Stats').click()
 
