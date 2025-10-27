@@ -33,7 +33,7 @@ test.describe('Import/Export', () => {
 
       // Click menu on draft and export
       const draftCard = page.locator(`text=Export Test`).locator('..')
-      const menuButton = draftCard.locator('button[class*="ghost"]').last()
+      const menuButton = draftCard.locator('button').last()
       await menuButton.click()
       await page.waitForSelector('text=Export', { timeout: 2000 })
       await page.locator('[role="menuitem"]:has-text("Export")').click()
@@ -61,7 +61,7 @@ test.describe('Import/Export', () => {
       const downloadPromise = page.waitForEvent('download')
 
       // Click header menu and export all
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Export All (JSON)', { timeout: 2000 })
       await page.locator('text=Export All (JSON)').click()
 
@@ -84,7 +84,7 @@ test.describe('Import/Export', () => {
       const downloadPromise = page.waitForEvent('download')
 
       // Click header menu and export CSV
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Export All (CSV)', { timeout: 2000 })
       await page.locator('text=Export All (CSV)').click()
 
@@ -103,7 +103,7 @@ test.describe('Import/Export', () => {
       const fixture = JSON.parse(fixtureContent)
 
       // Click header menu and import
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Import JSON', { timeout: 2000 })
 
       // Set up file chooser before clicking
@@ -134,7 +134,7 @@ test.describe('Import/Export', () => {
       const fixturePath = join(process.cwd(), 'tests/fixtures/multiple-drafts.json')
       const fixtureContent = readFileSync(fixturePath, 'utf-8')
 
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Import JSON', { timeout: 2000 })
 
       const fileChooserPromise = page.waitForEvent('filechooser')
@@ -159,7 +159,7 @@ test.describe('Import/Export', () => {
     })
 
     test('should handle invalid JSON gracefully', async ({ page }) => {
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Import JSON', { timeout: 2000 })
 
       const fileChooserPromise = page.waitForEvent('filechooser')
@@ -180,7 +180,7 @@ test.describe('Import/Export', () => {
       const fixturePath = join(process.cwd(), 'tests/fixtures/invalid-draft.json')
       const fixtureContent = readFileSync(fixturePath, 'utf-8')
 
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Import JSON', { timeout: 2000 })
 
       const fileChooserPromise = page.waitForEvent('filechooser')
@@ -198,7 +198,7 @@ test.describe('Import/Export', () => {
     })
 
     test('should handle empty file', async ({ page }) => {
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Import JSON', { timeout: 2000 })
 
       const fileChooserPromise = page.waitForEvent('filechooser')
@@ -227,7 +227,7 @@ test.describe('Import/Export', () => {
       const fixturePath = join(process.cwd(), 'tests/fixtures/sample-draft.json')
       const fixtureContent = readFileSync(fixturePath, 'utf-8')
 
-      await page.locator('button[class*="ghost"]').first().click()
+      await page.locator('button[aria-haspopup="menu"]').first().click()
       await page.waitForSelector('text=Import JSON', { timeout: 2000 })
 
       const fileChooserPromise = page.waitForEvent('filechooser')

@@ -324,8 +324,8 @@ test.describe('Draft Editor', () => {
       await clickDraftAction(page, 'Test', 'Edit')
       await page.locator('[role="tab"]:has-text("Organization")').click()
 
-      // Click X on tag1
-      const tag1Badge = page.locator('text=tag1').locator('..')
+      // Click X on tag1 (use first() to avoid strict mode violation if text appears multiple times)
+      const tag1Badge = page.locator('text=tag1').locator('..').first()
       await tag1Badge.locator('button').click()
 
       // tag1 should be removed
