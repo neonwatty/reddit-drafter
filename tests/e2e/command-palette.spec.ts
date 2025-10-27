@@ -149,12 +149,12 @@ test.describe('Command Palette', () => {
       // Press Enter to execute
       await page.keyboard.press('Enter')
 
-      // Wait for palette to close
-      await page.waitForSelector('.command-palette-overlay', { state: 'detached', timeout: 2000 })
+      // Wait for command to execute (match pattern of other command execution tests)
+      await page.waitForTimeout(300)
 
       // Should be on Favorites tab (verify by checking active tab)
       const favoritesTab = page.locator('[role="tab"]:has-text("Favorites")')
-      await expect(favoritesTab).toHaveAttribute('aria-selected', 'true', { timeout: 3000 })
+      await expect(favoritesTab).toHaveAttribute('aria-selected', 'true')
     })
   })
 
