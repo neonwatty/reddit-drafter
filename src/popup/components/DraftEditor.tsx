@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ import { validateDraft } from '@/lib/utils/validation'
 import { toast } from 'sonner'
 import MediaUploader from './MediaUploader'
 import MediaGallery from './MediaGallery'
-import type { RedditDraft } from '@/lib/types'
+import type { RedditDraft, MediaFile } from '@/lib/types'
 
 interface DraftEditorProps {
   draft: RedditDraft | null
@@ -45,13 +45,29 @@ export default function DraftEditor({
   const [formData, setFormData] = useState<Partial<RedditDraft>>({})
   const [tagInput, setTagInput] = useState('')
   const [saving, setSaving] = useState(false)
+  const [mediaRefreshKey, setMediaRefreshKey] = useState(0)
+  const [mediaCount, setMediaCount] = useState(0)
 
   // Reset form when draft changes
   useEffect(() => {
     if (draft) {
       setFormData(draft)
+      setMediaCount(0)
+      setMediaRefreshKey((key) => key + 1)
+    } else {
+      setFormData({})
+      setMediaCount(0)
+      setMediaRefreshKey(0)
     }
   }, [draft])
+
+  const refreshMedia = useCallback(() => {
+    setMediaRefreshKey((key) => key + 1)
+  }, [])
+
+  const handleMediaLoaded = useCallback((items: MediaFile[]) => {
+    setMediaCount(items.length)
+  }, [])
 
   const handleSave = async () => {
     if (!draft) return
@@ -123,10 +139,12 @@ export default function DraftEditor({
         </DialogHeader>
 
         <Tabs defaultValue="content" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className={`grid w-full ${(formData.postType === 'image' || formData.postType === 'video' || formData.postType === 'gallery') ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="metadata">Metadata</TabsTrigger>
-            <TabsTrigger value="media">Media</TabsTrigger>
+            {(formData.postType === 'image' || formData.postType === 'video' || formData.postType === 'gallery') && (
+              <TabsTrigger value="media">Media</TabsTrigger>
+            )}
             <TabsTrigger value="organization">Organization</TabsTrigger>
           </TabsList>
 
@@ -276,13 +294,16 @@ export default function DraftEditor({
               formData.postType === 'video' ||
               formData.postType === 'gallery') && draft && (
               <>
-                <MediaGallery draftId={draft.id} />
+                <MediaGallery
+                  draftId={draft.id}
+                  refreshKey={mediaRefreshKey}
+                  onMediaLoaded={handleMediaLoaded}
+                />
                 <MediaUploader
                   draftId={draft.id}
                   postType={formData.postType as 'image' | 'video' | 'gallery'}
-                  onMediaAdded={() => {
-                    // Refresh gallery
-                  }}
+                  existingMediaCount={mediaCount}
+                  onMediaAdded={refreshMedia}
                 />
               </>
             )}
@@ -330,6 +351,7 @@ export default function DraftEditor({
                       <button
                         onClick={() => handleRemoveTag(tag)}
                         className="hover:text-destructive"
+                        aria-label={`Remove tag ${tag}`}
                       >
                         <X className="h-3 w-3" />
                       </button>

@@ -15,7 +15,7 @@ const IMAGE_COMPRESSION_OPTIONS = {
 /**
  * Compress an image file
  */
-export async function compressImage(file: File): Promise<File> {
+async function compressImage(file: File): Promise<File> {
   try {
     const compressed = await imageCompression(file, IMAGE_COMPRESSION_OPTIONS)
     console.log(`[compressImage] Original: ${(file.size / 1024 / 1024).toFixed(2)}MB, Compressed: ${(compressed.size / 1024 / 1024).toFixed(2)}MB`)
@@ -30,7 +30,7 @@ export async function compressImage(file: File): Promise<File> {
 /**
  * Generate a thumbnail from a video file
  */
-export async function generateVideoThumbnail(file: File): Promise<string> {
+async function generateVideoThumbnail(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video')
     video.preload = 'metadata'
@@ -76,7 +76,7 @@ export async function generateVideoThumbnail(file: File): Promise<string> {
 /**
  * Convert a File to a data URL
  */
-export async function fileToDataUrl(file: File): Promise<string> {
+async function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(reader.result as string)
@@ -124,8 +124,13 @@ export async function processAndSaveVideo(
   draftId: string,
   order: number
 ): Promise<MediaFile> {
-  // Generate thumbnail
-  const thumbnail = await generateVideoThumbnail(file)
+  // Generate thumbnail (fallback to undefined if it fails)
+  let thumbnail: string | undefined
+  try {
+    thumbnail = await generateVideoThumbnail(file)
+  } catch (error) {
+    console.warn('[processAndSaveVideo] Failed to generate thumbnail, continuing without thumbnail.', error)
+  }
 
   // Convert video to data URL
   const dataUrl = await fileToDataUrl(file)
@@ -194,14 +199,6 @@ export async function getDraftMedia(draftId: string): Promise<MediaFile[]> {
  */
 export async function deleteDraftMedia(mediaId: string): Promise<void> {
   await deleteMediaFile(mediaId)
-}
-
-/**
- * Calculate total size of media for a draft
- */
-export async function getDraftMediaSize(draftId: string): Promise<number> {
-  const media = await getMediaForDraft(draftId)
-  return media.reduce((total: number, m: MediaFile) => total + m.size, 0)
 }
 
 /**

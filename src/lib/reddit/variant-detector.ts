@@ -57,34 +57,3 @@ export function detectRedditUsername(): string {
 
   return 'unknown'
 }
-
-/**
- * Detect Reddit theme (light or dark)
- */
-export function detectRedditTheme(): 'light' | 'dark' {
-  const variant = detectRedditVariant()
-
-  switch (variant) {
-    case 'old':
-      // old.reddit doesn't have native dark mode (RES adds it)
-      return 'light'
-
-    case 'new':
-      // Check for dark mode class or data attribute
-      if (document.documentElement.classList.contains('theme-dark') ||
-          document.documentElement.getAttribute('data-theme') === 'dark') {
-        return 'dark'
-      }
-      return 'light'
-
-    case 'sh':
-      // sh.reddit.com theme detection (placeholder)
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark'
-      }
-      return 'light'
-
-    default:
-      return 'light'
-  }
-}

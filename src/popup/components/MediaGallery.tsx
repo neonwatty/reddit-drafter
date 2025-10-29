@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,28 +9,36 @@ import type { MediaFile } from '@/lib/types'
 
 interface MediaGalleryProps {
   draftId: string
+  refreshKey?: number
   onMediaDeleted?: () => void
+  onMediaLoaded?: (media: MediaFile[]) => void
 }
 
-export default function MediaGallery({ draftId, onMediaDeleted }: MediaGalleryProps) {
+export default function MediaGallery({
+  draftId,
+  refreshKey = 0,
+  onMediaDeleted,
+  onMediaLoaded,
+}: MediaGalleryProps) {
   const [media, setMedia] = useState<MediaFile[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadMedia()
-  }, [draftId])
-
-  const loadMedia = async () => {
+  const loadMedia = useCallback(async () => {
     setLoading(true)
     try {
       const draftMedia = await getDraftMedia(draftId)
       setMedia(draftMedia)
+      onMediaLoaded?.(draftMedia)
     } catch (error) {
       console.error('[MediaGallery] Failed to load media:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [draftId, onMediaLoaded])
+
+  useEffect(() => {
+    loadMedia()
+  }, [loadMedia, refreshKey])
 
   const handleDelete = async (mediaId: string) => {
     if (!confirm('Delete this media file?')) return
@@ -38,7 +46,7 @@ export default function MediaGallery({ draftId, onMediaDeleted }: MediaGalleryPr
     try {
       await deleteDraftMedia(mediaId)
       toast.success('Media deleted')
-      loadMedia()
+      await loadMedia()
       onMediaDeleted?.()
     } catch (error) {
       console.error('[MediaGallery] Failed to delete media:', error)

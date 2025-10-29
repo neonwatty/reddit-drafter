@@ -67,7 +67,7 @@ export interface PollOption {
 }
 
 // Poll Validation Rules
-export interface PollValidationRules {
+interface PollValidationRules {
   minOptions: 2
   maxOptions: 6
   minDuration: 1    // days
@@ -99,13 +99,13 @@ export interface DraftFilters {
 export type RedditVariant = 'old' | 'new' | 'sh' | 'unknown'
 
 // Storage Type
-export type StorageType = 'indexeddb' | 'chrome-storage'
+type StorageType = 'indexeddb' | 'chrome-storage'
 
 // Theme Type
-export type Theme = 'light' | 'dark' | 'auto'
+type Theme = 'light' | 'dark' | 'auto'
 
 // User Preferences
-export interface UserPreferences {
+interface UserPreferences {
   theme: Theme
   imageCompressionQuality: number  // 0-100
   maxImageSizeBeforeCompression: number  // bytes

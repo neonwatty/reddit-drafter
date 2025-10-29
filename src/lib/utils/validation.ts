@@ -4,7 +4,7 @@ import { POLL_RULES } from '../types'
 /**
  * Validation result
  */
-export interface ValidationResult {
+interface ValidationResult {
   valid: boolean
   errors: string[]
 }
@@ -12,7 +12,7 @@ export interface ValidationResult {
 /**
  * Validate poll options and duration according to Reddit's rules
  */
-export function validatePoll(
+function validatePoll(
   options: PollOption[],
   duration?: number
 ): ValidationResult {
@@ -58,7 +58,7 @@ export function validatePoll(
 /**
  * Validate draft title
  */
-export function validateTitle(title: string): ValidationResult {
+function validateTitle(title: string): ValidationResult {
   const errors: string[] = []
 
   if (!title.trim()) {
@@ -78,7 +78,7 @@ export function validateTitle(title: string): ValidationResult {
 /**
  * Validate subreddit name
  */
-export function validateSubreddit(subreddit: string): ValidationResult {
+function validateSubreddit(subreddit: string): ValidationResult {
   const errors: string[] = []
 
   if (!subreddit.trim()) {
@@ -106,7 +106,7 @@ export function validateSubreddit(subreddit: string): ValidationResult {
 /**
  * Validate URL for link posts
  */
-export function validateUrl(url: string): ValidationResult {
+function validateUrl(url: string): ValidationResult {
   const errors: string[] = []
 
   if (!url.trim()) {

@@ -73,6 +73,39 @@ export async function addDraftToStorage(page: Page, draft: RedditDraft): Promise
 }
 
 /**
+ * Add media to storage programmatically using native IndexedDB API
+ */
+export async function addMediaToStorage(page: Page, media: any): Promise<void> {
+  await page.evaluate(async (mediaData) => {
+    return new Promise<void>((resolve, reject) => {
+      const request = window.indexedDB.open('RedditDrafterDB')
+
+      request.onerror = () => reject(request.error)
+
+      request.onsuccess = () => {
+        const db = request.result
+
+        if (!db.objectStoreNames.contains('media')) {
+          db.close()
+          reject(new Error('Database not initialized. Run clearStorage() and reload first.'))
+          return
+        }
+
+        const transaction = db.transaction(['media'], 'readwrite')
+        const store = transaction.objectStore('media')
+        const addRequest = store.add(mediaData)
+
+        addRequest.onerror = () => reject(addRequest.error)
+        addRequest.onsuccess = () => {
+          db.close()
+          resolve()
+        }
+      }
+    })
+  }, media)
+}
+
+/**
  * Get all drafts from storage using native IndexedDB API
  */
 export async function getAllDraftsFromStorage(page: Page): Promise<RedditDraft[]> {
@@ -207,22 +240,6 @@ export async function clickDraftAction(
 export async function switchTab(page: Page, tab: 'All' | 'Favorites'): Promise<void> {
   await page.locator(`[role="tab"]:has-text("${tab}")`).click()
   await page.waitForTimeout(300)
-}
-
-/**
- * Mock file upload
- */
-export async function mockFileUpload(page: Page, fileName: string, fileType: string, content: string): Promise<void> {
-  // This would be implemented with page.setInputFiles() for actual file inputs
-  // For now, we'll use evaluate to mock the File API
-  await page.evaluate(
-    ({ name, type, data }) => {
-      const file = new File([data], name, { type })
-      // Store for later use in tests
-      (window as any).__mockFile = file
-    },
-    { name: fileName, type: fileType, data: content }
-  )
 }
 
 /**
