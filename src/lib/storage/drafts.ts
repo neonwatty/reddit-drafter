@@ -35,10 +35,6 @@ export async function deleteAllDrafts(): Promise<void> {
   await db.drafts.clear()
 }
 
-export async function getDraft(id: string): Promise<RedditDraft | undefined> {
-  return db.drafts.get(id)
-}
-
 export async function listDrafts(filters?: DraftFilters): Promise<RedditDraft[]> {
   let query = db.drafts.toCollection()
 

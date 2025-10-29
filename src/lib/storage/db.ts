@@ -1,7 +1,7 @@
 import Dexie, { Table } from 'dexie'
 import type { RedditDraft, MediaFile } from '../types'
 
-export class DraftsDatabase extends Dexie {
+class DraftsDatabase extends Dexie {
   drafts!: Table<RedditDraft>
   media!: Table<MediaFile>
 

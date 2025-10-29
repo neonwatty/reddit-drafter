@@ -135,39 +135,3 @@ export function createMockVideoFile(draftId: string, overrides?: Partial<MediaFi
   }
 }
 
-/**
- * Export data for testing import functionality
- */
-export const MOCK_EXPORT_JSON_SINGLE = {
-  id: 'export-test-1',
-  createdAt: 1699900000000,
-  updatedAt: 1699900000000,
-  title: 'Exported Draft',
-  body: 'This is an exported draft',
-  subreddit: 'testexport',
-  postType: 'text',
-  nsfw: false,
-  spoiler: false,
-  oc: false,
-  sendReplies: true,
-  postToProfile: false,
-  redditUsername: 'exporter',
-  tags: ['exported', 'test'],
-  notes: 'Test notes',
-  favorite: false,
-}
-
-export const MOCK_EXPORT_JSON_MULTIPLE = [
-  MOCK_EXPORT_JSON_SINGLE,
-  {
-    ...MOCK_EXPORT_JSON_SINGLE,
-    id: 'export-test-2',
-    title: 'Second Exported Draft',
-  },
-]
-
-export const MOCK_INVALID_JSON = {
-  // Missing required fields
-  title: 'Invalid Draft',
-  // No subreddit, postType, etc.
-}

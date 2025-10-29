@@ -322,15 +322,15 @@ test.describe('Draft Editor', () => {
       await page.waitForTimeout(1000)
 
       await clickDraftAction(page, 'Test', 'Edit')
-      await page.locator('[role="tab"]:has-text("Organization")').click()
+      const dialog = page.locator('[role="dialog"]')
+      await dialog.locator('[role="tab"]:has-text("Organization")').click()
 
       // Click X on tag1 (use first() to avoid strict mode violation if text appears multiple times)
-      const tag1Badge = page.locator('text=tag1').locator('..').first()
-      await tag1Badge.locator('button').click()
+      await dialog.locator('button[aria-label="Remove tag tag1"]').click()
 
       // tag1 should be removed
-      await expect(page.locator('text=tag1')).not.toBeVisible()
-      await expect(page.locator('text=tag2')).toBeVisible()
+      await expect(dialog.locator('text=tag1')).not.toBeVisible()
+      await expect(dialog.locator('text=tag2')).toBeVisible()
 
       await page.locator('button:has-text("Save Changes")').click()
       await waitForToast(page, 'Draft updated successfully')
@@ -413,7 +413,7 @@ test.describe('Draft Editor', () => {
       await expect(page.locator('[role="tab"]:has-text("Media")')).toBeVisible()
     })
 
-    test('should show message for non-media post types', async ({ page }) => {
+    test('should hide media tab for non-media post types', async ({ page }) => {
       const draft = createMockDraft({ title: 'Test', postType: 'text' })
       await addDraftToStorage(page, draft)
 
@@ -423,19 +423,15 @@ test.describe('Draft Editor', () => {
 
       await clickDraftAction(page, 'Test', 'Edit')
 
-      // Click Media tab
-      await page.locator('[role="tab"]:has-text("Media")').click()
-
-      // Should show message about media being unavailable
-      await expect(
-        page.locator('text=Media uploads are only available for Image, Video, and Gallery post types')
-      ).toBeVisible()
+      // Media tab should not be visible
+      const mediaTab = page.locator('[role="tab"]:has-text("Media")')
+      await expect(mediaTab).toHaveCount(0)
     })
   })
 
   test.describe('Tab Navigation', () => {
     test('should navigate between tabs', async ({ page }) => {
-      const draft = createMockDraft({ title: 'Test' })
+      const draft = createMockDraft({ title: 'Test', postType: 'image' })
       await addDraftToStorage(page, draft)
 
       await page.reload()

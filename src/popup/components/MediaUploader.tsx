@@ -12,20 +12,21 @@ import {
   isValidVideoType,
   validateFileSize,
   formatBytes,
+  getDraftMedia,
 } from '@/lib/utils/media'
 import type { MediaFile } from '@/lib/types'
 
 interface MediaUploaderProps {
   draftId: string
   postType: 'image' | 'video' | 'gallery'
-  existingMedia?: MediaFile[]
+  existingMediaCount?: number
   onMediaAdded?: (media: MediaFile) => void
 }
 
 export default function MediaUploader({
   draftId,
   postType,
-  existingMedia = [],
+  existingMediaCount = 0,
   onMediaAdded,
 }: MediaUploaderProps) {
   const [uploading, setUploading] = useState(false)
@@ -36,50 +37,62 @@ export default function MediaUploader({
     const files = e.target.files
     if (!files || files.length === 0) return
 
+    const selectedFiles =
+      postType === 'gallery' ? Array.from(files) : [files[0]]
+
+    if (selectedFiles.length === 0) {
+      return
+    }
+
     setUploading(true)
 
     try {
-      const file = files[0]
+      let currentMediaCount =
+        existingMediaCount || (await getDraftMedia(draftId)).length
 
-      // Validate file type
-      const isImage = isValidImageType(file)
-      const isVideo = isValidVideoType(file)
+      for (const file of selectedFiles) {
+        // Validate file type
+        const isImage = isValidImageType(file)
+        const isVideo = isValidVideoType(file)
 
-      if (postType === 'image' && !isImage) {
-        toast.error('Please select a valid image file (JPEG, PNG, GIF, WebP)')
-        return
-      }
+        if (postType === 'image' && !isImage) {
+          toast.error('Please select a valid image file (JPEG, PNG, GIF, WebP)')
+          continue
+        }
 
-      if (postType === 'video' && !isVideo) {
-        toast.error('Please select a valid video file (MP4, WebM, MOV)')
-        return
-      }
+        if (postType === 'video' && !isVideo) {
+          toast.error('Please select a valid video file (MP4, WebM, MOV)')
+          continue
+        }
 
-      if (postType === 'gallery' && !isImage) {
-        toast.error('Gallery posts only support images')
-        return
-      }
+        if (postType === 'gallery' && !isImage) {
+          toast.error('Gallery posts only support images')
+          continue
+        }
 
-      // Validate file size
-      const sizeValidation = validateFileSize(file)
-      if (!sizeValidation.valid) {
-        toast.error(sizeValidation.error)
-        return
-      }
+        // Validate file size
+        const sizeValidation = validateFileSize(file)
+        if (!sizeValidation.valid) {
+          toast.error(sizeValidation.error)
+          continue
+        }
 
-      // Process and save
-      const order = existingMedia.length
+        const order = currentMediaCount
 
-      if (isImage) {
-        setProgress('Compressing image...')
-        const media = await processAndSaveImage(file, draftId, order)
-        toast.success(`Image uploaded: ${formatBytes(media.size)}`)
-        onMediaAdded?.(media)
-      } else if (isVideo) {
-        setProgress('Generating thumbnail...')
-        const media = await processAndSaveVideo(file, draftId, order)
-        toast.success(`Video uploaded: ${formatBytes(media.size)}`)
-        onMediaAdded?.(media)
+        // Process and save
+        if (isImage) {
+          setProgress('Compressing image...')
+          const media = await processAndSaveImage(file, draftId, order)
+          toast.success(`Image uploaded: ${formatBytes(media.size)}`)
+          currentMediaCount += 1
+          onMediaAdded?.(media)
+        } else if (isVideo) {
+          setProgress('Processing video...')
+          const media = await processAndSaveVideo(file, draftId, order)
+          toast.success(`Video uploaded: ${formatBytes(media.size)}`)
+          currentMediaCount += 1
+          onMediaAdded?.(media)
+        }
       }
     } catch (error) {
       console.error('[MediaUploader] Upload failed:', error)
@@ -116,7 +129,7 @@ export default function MediaUploader({
       case 'video':
         return 'Upload Video'
       case 'gallery':
-        return existingMedia.length > 0 ? 'Add Another Image' : 'Upload Images'
+        return existingMediaCount > 0 ? 'Add Another Image' : 'Upload Images'
       default:
         return 'Upload Media'
     }
@@ -170,9 +183,9 @@ export default function MediaUploader({
           {postType === 'gallery' && 'Max 20MB per image, up to 20 images'}
         </p>
 
-        {postType === 'gallery' && existingMedia.length > 0 && (
+        {postType === 'gallery' && existingMediaCount > 0 && (
           <p className="text-xs text-muted-foreground">
-            {existingMedia.length} / 20 images added
+            {existingMediaCount} / 20 images added
           </p>
         )}
       </div>

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "src/popup/main.tsx",
+    "src/background.ts",
+    "src/content/reddit.tsx"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "tests/**/*.{ts,tsx}"
+  ],
+  "ignore": [
+    "dist/**",
+    "build/**",
+    "playwright-report/**",
+    "test-results/**"
+  ],
+  "vite": {
+    "config": ["vite.config.ts"],
+    "entry": [
+      "src/popup/index.html"
+    ]
+  },
+  "playwright": {
+    "config": ["playwright.config.ts"],
+    "entry": [
+      "tests/**/*.spec.ts"
+    ]
+  }
+}

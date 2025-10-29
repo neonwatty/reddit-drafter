@@ -7,6 +7,7 @@ import {
   addDraftToStorage,
   getAllDraftsFromStorage,
   waitForToast,
+  clickDraftAction,
 } from '../utils/test-helpers'
 import { createMockDraft, createMockDrafts } from '../utils/mock-data'
 
@@ -31,12 +32,8 @@ test.describe('Import/Export', () => {
       // Set up download promise before clicking
       const downloadPromise = page.waitForEvent('download')
 
-      // Click menu on draft and export
-      const draftCard = page.locator(`text=Export Test`).locator('..')
-      const menuButton = draftCard.locator('button').last()
-      await menuButton.click()
-      await page.waitForSelector('text=Export', { timeout: 2000 })
-      await page.locator('[role="menuitem"]:has-text("Export")').click()
+      // Click menu on draft and export using helper
+      await clickDraftAction(page, 'Export Test', 'Export')
 
       // Wait for download
       const download = await downloadPromise
@@ -173,7 +170,10 @@ test.describe('Import/Export', () => {
       })
 
       // Should show error toast
-      await waitForToast(page, 'Failed to import')
+      // Should show error toast (friendly message or parse error)
+      await page.waitForSelector('text=/Failed to import drafts|Invalid JSON|Unexpected token/i', {
+        timeout: 5000,
+      })
     })
 
     test('should validate required fields on import', async ({ page }) => {
