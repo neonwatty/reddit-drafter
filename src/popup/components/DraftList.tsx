@@ -10,6 +10,7 @@ interface DraftListProps {
   onToggleFavorite?: (draft: RedditDraft) => void
   onExport?: (draft: RedditDraft) => void
   onDuplicate?: (draft: RedditDraft) => void
+  onLoad?: (draft: RedditDraft) => void
 }
 
 export default function DraftList({
@@ -20,6 +21,7 @@ export default function DraftList({
   onToggleFavorite,
   onExport,
   onDuplicate,
+  onLoad,
 }: DraftListProps) {
   if (loading) {
     return (
@@ -52,6 +54,7 @@ export default function DraftList({
             onToggleFavorite={onToggleFavorite}
             onExport={onExport}
             onDuplicate={onDuplicate}
+            onLoad={onLoad}
           />
         ))}
       </div>

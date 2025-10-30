@@ -30,6 +30,7 @@ import DraftList from './components/DraftList'
 import SearchBar from './components/SearchBar'
 import DraftEditor from './components/DraftEditor'
 import StorageStats from './components/StorageStats'
+import SaveBanner from './components/SaveBanner'
 import {
   exportDraftToFile,
   exportDraftsToFile,
@@ -38,6 +39,7 @@ import {
 } from '@/lib/utils/export-import'
 import CommandPalette, { useCommandPalette, CommandIcons, type CommandAction } from '@/components/CommandPalette'
 import type { RedditDraft } from '@/lib/types'
+import { buildSubmitUrl, getCurrentRedditVariant } from '@/lib/utils/url-builder'
 
 function App() {
   const [storageReady, setStorageReady] = useState(false)
@@ -59,7 +61,7 @@ function App() {
     })
   }, [])
 
-  // Listen for messages from content script (when drafts are saved from sidebar)
+  // Listen for messages from content script (when drafts are saved from SaveBanner)
   useEffect(() => {
     if (!storageReady) return
 
@@ -193,6 +195,44 @@ function App() {
     } catch (error) {
       console.error('[App] Failed to duplicate draft:', error)
       toast.error('Failed to duplicate draft')
+    }
+  }
+
+  const handleLoad = async (draft: RedditDraft) => {
+    try {
+      // Get current active tab
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+
+      if (!tab.id) {
+        toast.error('No active tab found')
+        return
+      }
+
+      // Detect Reddit variant (default to 'new' if not on Reddit)
+      let variant = getCurrentRedditVariant(tab.url)
+      if (variant === 'unknown') {
+        variant = 'new' // Default to new Reddit
+      }
+
+      // Build submit URL for the draft's subreddit
+      const submitUrl = buildSubmitUrl(draft.subreddit, variant)
+
+      // Store draft ID to load after navigation
+      await chrome.storage.local.set({ pendingDraftLoad: draft.id })
+
+      // Navigate to submit page
+      await chrome.tabs.update(tab.id, { url: submitUrl })
+
+      // Show success message
+      toast.success(`Navigating to r/${draft.subreddit || 'Reddit'} submit page...`)
+
+      // Close popup after a short delay
+      setTimeout(() => {
+        window.close()
+      }, 500)
+    } catch (error) {
+      console.error('[App] Failed to load draft:', error)
+      toast.error('Failed to load draft')
     }
   }
 
@@ -339,6 +379,9 @@ function App() {
         </div>
       ) : (
         <>
+          {/* Save Banner - only shows when on Reddit submit page */}
+          <SaveBanner onSaved={loadDrafts} />
+
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="flex-1 flex flex-col px-4 pt-4">
             <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -372,6 +415,7 @@ function App() {
                 onToggleFavorite={handleToggleFavorite}
                 onExport={handleExport}
                 onDuplicate={handleDuplicate}
+                onLoad={handleLoad}
               />
             </TabsContent>
 
@@ -384,6 +428,7 @@ function App() {
                 onToggleFavorite={handleToggleFavorite}
                 onExport={handleExport}
                 onDuplicate={handleDuplicate}
+                onLoad={handleLoad}
               />
             </TabsContent>
           </Tabs>

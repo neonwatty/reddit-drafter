@@ -15,6 +15,10 @@ export async function createDraft(draft: Omit<RedditDraft, 'id' | 'createdAt' | 
   return newDraft
 }
 
+export async function getDraft(id: string): Promise<RedditDraft | undefined> {
+  return await db.drafts.get(id)
+}
+
 export async function updateDraft(id: string, updates: Partial<RedditDraft>): Promise<void> {
   await db.drafts.update(id, {
     ...updates,

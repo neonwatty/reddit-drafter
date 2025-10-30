@@ -1,12 +1,10 @@
 import { test, expect } from '@playwright/test'
+import { navigateToPopup } from '../utils/test-helpers'
 
 test.describe('Popup UI', () => {
   test('should display the popup with correct title', async ({ page }) => {
-    // Navigate to the built popup HTML
-    await page.goto('/src/popup/index.html')
-
-    // Wait for React to render
-    await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
+    // Navigate to the popup with proper setup
+    await navigateToPopup(page)
 
     // Check title is present
     const title = await page.locator('h1:has-text("Reddit Drafter")')
@@ -14,20 +12,15 @@ test.describe('Popup UI', () => {
   })
 
   test('should show tabs for All and Favorites', async ({ page }) => {
-    await page.goto('/src/popup/index.html')
-    await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
+    await navigateToPopup(page)
 
     // Check tabs are present - use role="tab" to avoid matching filter dropdown
-    await expect(page.locator('[role="tab"]', { hasText: 'All' })).toBeVisible()
-    await expect(page.locator('[role="tab"]', { hasText: 'Favorites' })).toBeVisible()
+    await expect(page.locator('[role="tab"]').filter({ hasText: 'All' })).toBeVisible()
+    await expect(page.locator('[role="tab"]').filter({ hasText: 'Favorites' })).toBeVisible()
   })
 
   test('should display empty state when no drafts exist', async ({ page }) => {
-    await page.goto('/src/popup/index.html')
-    await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
-
-    // Wait for storage to initialize
-    await page.waitForTimeout(1000)
+    await navigateToPopup(page)
 
     // Should show empty state
     const emptyMessage = page.locator('text=No drafts found')
@@ -35,8 +28,7 @@ test.describe('Popup UI', () => {
   })
 
   test('should have working search bar', async ({ page }) => {
-    await page.goto('/src/popup/index.html')
-    await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
+    await navigateToPopup(page)
 
     // Find search input
     const searchInput = page.locator('input[placeholder*="Search"]')
@@ -48,8 +40,7 @@ test.describe('Popup UI', () => {
   })
 
   test('should have filter dropdowns', async ({ page }) => {
-    await page.goto('/src/popup/index.html')
-    await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
+    await navigateToPopup(page)
 
     // Check for filter controls - use more specific selectors
     const filterButton = page.locator('[role="combobox"]').first()
@@ -57,11 +48,10 @@ test.describe('Popup UI', () => {
   })
 
   test('should display storage stats', async ({ page }) => {
-    await page.goto('/src/popup/index.html')
-    await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
+    await navigateToPopup(page)
 
     // Wait for storage stats to load
-    await page.waitForTimeout(1500)
+    await page.waitForTimeout(500)
 
     // Check for storage usage component
     const storageHeading = page.locator('text=Storage Usage')
@@ -69,8 +59,7 @@ test.describe('Popup UI', () => {
   })
 
   test('should have actions menu button', async ({ page }) => {
-    await page.goto('/src/popup/index.html')
-    await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
+    await navigateToPopup(page)
 
     // Find the header actions menu button
     const menuButton = page.locator('button').filter({ hasText: '' }).first()

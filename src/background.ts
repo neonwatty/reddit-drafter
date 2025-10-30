@@ -5,7 +5,7 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log('[Reddit Drafter] Extension installed')
 })
 
-// Message passing: Forward messages from content script to popup
+// Message passing: Forward messages from content script (SaveBanner) to popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('[Background] Received message:', message, 'from:', sender.tab?.id)
 
