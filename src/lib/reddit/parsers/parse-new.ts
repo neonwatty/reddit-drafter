@@ -311,6 +311,7 @@ export function parseNewRedditForm(): Partial<RedditDraft> {
     draft.sendReplies = sendrepliesCheckbox.checked
   }
 
+  // TODO: Flair parsing - needs proper selector research for current Reddit layout
   // Get flair if selected
   const flairElement = document.querySelector(SEL.flairSelector)
   if (flairElement) {

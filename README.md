@@ -23,16 +23,13 @@ A powerful Chrome extension for managing Reddit post drafts locally with full me
 - Media file management with size tracking
 
 ### ⚡ Quick Actions
-- **Sidebar (Reddit pages)**: Quick save/load with FAB button
-  - Keyboard shortcut: `Ctrl+Shift+D` to toggle sidebar
-  - Keyboard shortcut: `Ctrl+Shift+S` to quick save
 - **Popup UI**: Full draft management interface
   - Keyboard shortcut: `Ctrl+K` for command palette
+- **Save Banner**: Quick save from Reddit submit pages
 - One-click load drafts back into Reddit forms
 
 ### 🎨 Modern UI
 - Clean, modern interface built with shadcn/ui
-- Shadow DOM isolation (no conflicts with Reddit's CSS)
 - Dark mode support (matches system preference)
 - Responsive design
 
@@ -75,8 +72,8 @@ A powerful Chrome extension for managing Reddit post drafts locally with full me
 #### From Reddit Submit Page
 1. Navigate to any Reddit submit page (old.reddit.com, new.reddit.com, or sh.reddit.com)
 2. Fill out your post details
-3. Click the floating **Draft** button (bottom-right) or press `Ctrl+Shift+D`
-4. Click **"Save Draft"** or press `Ctrl+Shift+S`
+3. Open the extension popup (click the Reddit Drafter icon in toolbar)
+4. Click **"Save Draft"** in the banner that appears
 
 ### Managing Drafts
 
@@ -88,19 +85,11 @@ A powerful Chrome extension for managing Reddit post drafts locally with full me
 
 ### Loading a Draft
 
-#### From Sidebar
-1. Open the sidebar on a Reddit submit page (`Ctrl+Shift+D`)
-2. View recent drafts in the sidebar
-3. Click **"Load"** on any draft
-4. Confirm if the form already has content
-
 #### From Popup
 1. Open the popup
 2. Find the draft you want to load
-3. Click the menu (⋮) and select **"Edit"**
-4. Review the draft details
-5. Navigate to the appropriate subreddit's submit page
-6. Use the Load feature from the sidebar
+3. Click the menu (⋮) and select **"Load in Reddit"**
+4. The extension will automatically navigate to the correct submit page and inject the draft content
 
 ### Command Palette
 
@@ -130,10 +119,8 @@ For image, video, and gallery posts:
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+Shift+D` | Toggle sidebar (on Reddit pages) |
-| `Ctrl+Shift+S` | Quick save current form (sidebar) |
 | `Ctrl+K` | Open command palette (popup) |
-| `Esc` | Close sidebar or command palette |
+| `Esc` | Close command palette |
 
 ## 💾 Storage
 
@@ -188,8 +175,7 @@ reddit-drafter/
 ├── src/
 │   ├── background.ts              # Service worker
 │   ├── content/
-│   │   ├── reddit.tsx            # Content script entry
-│   │   └── sidebar/              # Sidebar components
+│   │   └── reddit.tsx            # Content script entry
 │   ├── popup/
 │   │   ├── App.tsx               # Popup main app
 │   │   └── components/           # Popup components

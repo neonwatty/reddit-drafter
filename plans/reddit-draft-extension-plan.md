@@ -11,9 +11,10 @@
    - Direct Chrome API access (no abstraction layer)
    - Smaller bundle size
 
-2. **Architecture:** Changed from button injection → **Shadow DOM sidebar** approach
-   - Sidebar hidden by default, toggleable via FAB or `Ctrl+Shift+D`
-   - Better UX, more space for features, isolated from Reddit's styles
+2. **Architecture:** Changed from button injection → **Popup-first** approach
+   - Popup UI for managing all drafts
+   - SaveBanner for quick saving from Reddit submit pages
+   - Auto-navigation to correct submit page when loading drafts
 
 3. **Data Model:** Added missing fields
    - `pollDuration` (CRITICAL - polls need 1-7 day duration)
@@ -35,19 +36,17 @@
    - **Always warn before overwriting** form content
    - **Only on submit pages** (not all Reddit pages)
 
-7. **Keyboard Shortcuts:** Comprehensive set defined
-   - `Ctrl+Shift+D` - Toggle sidebar
+7. **Keyboard Shortcuts:** Simplified set defined
    - `Ctrl+K` - Command palette
-   - `Ctrl+Shift+S` - Quick save (fixed from Ctrl+S to avoid browser conflict)
-   - Plus navigation and editor shortcuts
+   - Plus navigation shortcuts in popup
 
 8. **Timeline:** More realistic estimate
    - 20-25 days part-time (vs original 28 days)
-   - Focused on sidebar-first approach in early phases
+   - Focused on popup-first approach
 
 9. **Critical Technical Fixes (Latest Review):**
-   - **CSS Injection:** Fixed Shadow DOM style injection using Constructable Stylesheets
    - **shadcn/ui Portals:** Added container prop configuration for portal components
+   - **React Contenteditable:** Fixed body text injection using native setters and React _valueTracker
    - **Media Interception:** Specified capture-phase event listeners for file cloning
    - **Removed WXT References:** Switched fully to direct `chrome.storage` API
    - **Username Detection:** Added parser logic for each Reddit variant

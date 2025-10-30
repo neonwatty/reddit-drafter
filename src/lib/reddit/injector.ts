@@ -304,29 +304,7 @@ async function populateNewRedditForm(
     toggleNewRedditButton(SEL.oc, true)
   }
 
-  // Set flair if present
-  if (draft.flair && draft.flair.templateId) {
-    console.log('[populateNewRedditForm] Setting flair:', draft.flair)
-
-    // First, click the flair button to open the flair picker
-    const flairButton = document.querySelector(SEL.flairButton) as HTMLElement
-    if (flairButton) {
-      flairButton.click()
-
-      // Wait a bit for the flair picker to open, then select the flair
-      setTimeout(() => {
-        const flairOption = document.querySelector(`[data-flair-template-id="${draft.flair!.templateId}"]`) as HTMLElement
-        if (flairOption) {
-          flairOption.click()
-          console.log('[populateNewRedditForm] Flair selected')
-        } else {
-          console.warn('[populateNewRedditForm] Flair template not found:', draft.flair!.templateId)
-        }
-      }, 300)
-    } else {
-      console.warn('[populateNewRedditForm] Flair button not found')
-    }
-  }
+  // TODO: Flair injection - needs proper selector research for current Reddit layout
 
   return { success: true }
 }

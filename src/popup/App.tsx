@@ -61,7 +61,7 @@ function App() {
     })
   }, [])
 
-  // Listen for messages from content script (when drafts are saved from sidebar)
+  // Listen for messages from content script (when drafts are saved from SaveBanner)
   useEffect(() => {
     if (!storageReady) return
 

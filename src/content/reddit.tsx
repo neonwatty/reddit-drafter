@@ -1,7 +1,3 @@
-import { createShadowDOMSidebar, mountReactApp } from '@/lib/shadow-dom/create-sidebar'
-import RedditSidebarApp from './sidebar/RedditSidebarApp'
-import ReactDOM from 'react-dom/client'
-import { Toaster, toast } from 'sonner'
 import { waitForFormReady, loadDraftIntoForm } from '@/lib/reddit/injector'
 import { getDraft, createDraft } from '@/lib/storage/drafts'
 import { initStorage } from '@/lib/storage/db'
@@ -10,8 +6,6 @@ import { parseNewRedditForm } from '@/lib/reddit/parsers/parse-new'
 import { parseSHRedditForm } from '@/lib/reddit/parsers/parse-sh'
 import { validateDraft } from '@/lib/utils/validation'
 import type { RedditDraft } from '@/lib/types'
-// Import CSS as string using Vite's ?inline modifier
-import styles from '@/globals.css?inline'
 
 // Detect Reddit variant for logging
 function detectRedditVariant(): string {
@@ -36,13 +30,12 @@ async function checkPendingDraftLoad() {
       await initStorage()
       console.log('[Reddit Drafter] Storage initialized')
 
-      // Wait for form to be ready with longer timeout and additional delay
+      // Wait for form to be ready with longer timeout
       console.log('[Reddit Drafter] Waiting for form to be ready...')
       const formReady = await waitForFormReady(10000)
 
       if (!formReady) {
         console.error('[Reddit Drafter] Form not ready after timeout')
-        toast.error('Failed to load draft - form not ready')
         await chrome.storage.local.remove('pendingDraftLoad')
         return
       }
@@ -54,7 +47,6 @@ async function checkPendingDraftLoad() {
 
       if (!draft) {
         console.error('[Reddit Drafter] Draft not found:', pendingDraftLoad)
-        toast.error('Draft not found')
         await chrome.storage.local.remove('pendingDraftLoad')
         return
       }
@@ -73,20 +65,6 @@ async function checkPendingDraftLoad() {
       // Inject draft into form (skip warning since this is intentional)
       const result = await loadDraftIntoForm(draft, true)
       console.log('[Reddit Drafter] Injection result:', result)
-
-      if (result.success) {
-        toast.success('Draft loaded successfully!')
-        if (result.hasMedia) {
-          setTimeout(() => {
-            toast.warning(
-              `This draft has ${result.mediaCount} attached file(s). Please re-attach them manually.`,
-              { duration: 5000 }
-            )
-          }, 500)
-        }
-      } else {
-        toast.error(result.error || 'Failed to load draft')
-      }
 
       // Clear pending load
       await chrome.storage.local.remove('pendingDraftLoad')
@@ -204,26 +182,6 @@ async function init() {
   console.log(`[Reddit Drafter] Initializing on ${variant} Reddit...`)
 
   try {
-    // Create Shadow DOM sidebar
-    const { mountPoint } = createShadowDOMSidebar({
-      containerId: 'reddit-drafter-root',
-      appId: 'reddit-drafter-app',
-      styles // Pass CSS string directly
-    })
-
-    // Mount React app inside Shadow DOM
-    mountReactApp(mountPoint, RedditSidebarApp)
-
-    // Mount Toaster OUTSIDE Shadow DOM for proper styling
-    const toasterContainer = document.createElement('div')
-    toasterContainer.id = 'reddit-drafter-toaster'
-    document.body.appendChild(toasterContainer)
-
-    const toasterRoot = ReactDOM.createRoot(toasterContainer)
-    toasterRoot.render(<Toaster position="top-center" className="z-[9999]" />)
-
-    console.log('[Reddit Drafter] Shadow DOM sidebar injected successfully!')
-
     // Check for pending draft load from popup
     await checkPendingDraftLoad()
   } catch (error) {
