@@ -462,7 +462,7 @@ test.describe('Draft Editor', () => {
   })
 
   test.describe('Validation', () => {
-    test('should validate title is required', async ({ page }) => {
+    test('should block saving without title', async ({ page }) => {
       const draft = createMockDraft({ title: 'Test' })
       await addDraftToStorage(page, draft)
 
@@ -478,11 +478,10 @@ test.describe('Draft Editor', () => {
 
       await page.locator('button:has-text("Save Changes")').click()
 
-      // Should show validation error
-      await waitForToast(page, 'Validation failed')
+      await waitForToast(page, 'Cannot save: Title is required')
     })
 
-    test('should validate subreddit is required', async ({ page }) => {
+    test('should block saving without subreddit', async ({ page }) => {
       const draft = createMockDraft({ title: 'Test' })
       await addDraftToStorage(page, draft)
 
@@ -498,7 +497,7 @@ test.describe('Draft Editor', () => {
 
       await page.locator('button:has-text("Save Changes")').click()
 
-      await waitForToast(page, 'Validation failed')
+      await waitForToast(page, 'Cannot save: Subreddit is required')
     })
   })
 

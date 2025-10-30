@@ -1,38 +1,22 @@
-import Dexie, { Table } from 'dexie'
-import type { RedditDraft, MediaFile } from '../types'
+/**
+ * Storage using chrome.storage.local API
+ * This is shared across all extension contexts (content scripts, popup, background)
+ */
+import { db } from './chrome-storage'
 
-class DraftsDatabase extends Dexie {
-  drafts!: Table<RedditDraft>
-  media!: Table<MediaFile>
-
-  constructor() {
-    super('RedditDrafterDB')
-
-    // Version 1: Initial schema
-    this.version(1).stores({
-      drafts: 'id, subreddit, postType, createdAt, updatedAt, *tags, favorite, redditUsername',
-      media: 'id, draftId, uploadedAt'
-    })
-  }
-}
-
-export const db = new DraftsDatabase()
+export { db }
 
 /**
- * Initialize storage with fallback to chrome.storage.local if IndexedDB fails
+ * Initialize storage
  */
 export async function initStorage() {
   try {
-    // Try to open IndexedDB
     await db.open()
-    console.log('[Storage] IndexedDB initialized successfully')
-    return { type: 'indexeddb' as const, db }
+    console.log('[Storage] chrome.storage.local initialized successfully')
+    return { type: 'chrome-storage' as const, db }
   } catch (error) {
-    console.error('[Storage] IndexedDB failed to initialize:', error)
-
-    // Fallback to chrome.storage.local (limited capacity)
-    console.warn('[Storage] Falling back to chrome.storage.local')
-    return { type: 'chrome-storage' as const }
+    console.error('[Storage] Failed to initialize storage:', error)
+    throw error
   }
 }
 
@@ -40,19 +24,21 @@ export async function initStorage() {
  * Check storage quota and warn user
  */
 export async function checkStorageQuota() {
-  if ('storage' in navigator && 'estimate' in navigator.storage) {
-    const estimate = await navigator.storage.estimate()
-    const usagePercent = ((estimate.usage ?? 0) / (estimate.quota ?? 1)) * 100
+  try {
+    const quotaInfo = await db.getQuotaInfo()
 
-    if (usagePercent > 80) {
+    if (quotaInfo.percentUsed > 80) {
       return {
         warning: true,
-        message: `Storage is ${usagePercent.toFixed(1)}% full. Consider deleting old drafts or exporting to free up space.`,
-        usage: estimate.usage,
-        quota: estimate.quota
+        message: `Storage is ${quotaInfo.percentUsed.toFixed(1)}% full. Consider deleting old drafts or exporting to free up space.`,
+        usage: quotaInfo.usage,
+        quota: quotaInfo.quota
       }
     }
-  }
 
-  return { warning: false }
+    return { warning: false }
+  } catch (error) {
+    console.error('[Storage] Failed to check quota:', error)
+    return { warning: false }
+  }
 }

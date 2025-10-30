@@ -10,11 +10,18 @@ export function detectRedditVariant(): RedditVariant {
   if (hostname === 'sh.reddit.com') return 'sh'
 
   if (hostname.includes('reddit.com')) {
-    // Detect new Reddit by checking for React root
-    if (document.querySelector('#react-root') ||
-        document.querySelector('[data-redditstyle]')) {
-      return 'new'
-    }
+    // Detect new Reddit by checking for known root elements (React or Shreddit)
+    const hasNewRedditRoot =
+      document.querySelector('#react-root') ||
+      document.querySelector('[data-redditstyle]') ||
+      document.querySelector('shreddit-app') ||
+      document.querySelector('faceplate-tracker') ||
+      document.querySelector('[data-testid="post-editor"]')
+
+    if (hasNewRedditRoot) return 'new'
+
+    // Fallback: default to new Reddit on standard domains even if markers aren't found yet
+    return 'new'
   }
 
   return 'unknown'

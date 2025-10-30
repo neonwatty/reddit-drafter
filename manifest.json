@@ -6,6 +6,7 @@
 
   "permissions": [
     "storage",
+    "unlimitedStorage",
     "activeTab"
   ],
 
@@ -35,10 +36,10 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.reddit.com/*/submit",
-        "*://*.reddit.com/submit",
-        "*://sh.reddit.com/*/submit",
-        "*://sh.reddit.com/submit"
+        "*://*.reddit.com/*/submit*",
+        "*://*.reddit.com/submit*",
+        "*://sh.reddit.com/*/submit*",
+        "*://sh.reddit.com/submit*"
       ],
       "js": ["src/content/reddit.tsx"]
     }

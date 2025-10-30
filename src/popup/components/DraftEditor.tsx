@@ -85,8 +85,11 @@ export default function DraftEditor({
         pollDuration: formData.pollDuration,
       })
 
+      // Block save if validation fails
       if (!validation.valid) {
-        toast.error(`Validation failed: ${validation.errors[0]}`)
+        console.warn('[DraftEditor] Draft validation failed:', validation.errors)
+        toast.error(`Cannot save: ${validation.errors.join(', ')}`, { duration: 5000 })
+        setSaving(false)
         return
       }
 
@@ -97,6 +100,9 @@ export default function DraftEditor({
       })
 
       toast.success('Draft updated successfully!')
+      if (validation.warnings.length) {
+        toast.warning(`Warnings: ${validation.warnings.join(', ')}`)
+      }
       onSaved?.()
       onOpenChange(false)
     } catch (error) {

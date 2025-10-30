@@ -41,6 +41,14 @@ export default function QuickSave({ onSave }: QuickSaveProps) {
           throw new Error(`Unsupported Reddit variant: ${variant}`)
       }
 
+      // Debug: log parsed data
+      console.log('[QuickSave] Parsed data:', {
+        title: parsedData.title,
+        subreddit: parsedData.subreddit,
+        postType: parsedData.postType,
+        bodyLength: parsedData.body?.length || 0
+      })
+
       // Validate draft
       const validation = validateDraft({
         title: parsedData.title || '',
@@ -51,9 +59,26 @@ export default function QuickSave({ onSave }: QuickSaveProps) {
         pollDuration: parsedData.pollDuration
       })
 
+      // Block save if validation fails
       if (!validation.valid) {
-        console.error('[QuickSave] Validation errors:', validation.errors)
-        toast.error(`Validation failed: ${validation.errors[0]}`)
+        console.warn('[QuickSave] Draft validation failed:', validation.errors)
+        toast.error(`Cannot save: ${validation.errors.join(', ')}`, { duration: 5000 })
+        return
+      }
+
+      // Block if parsed content is completely empty
+      const hasContent =
+        !!(parsedData.title && parsedData.title.trim()) ||
+        !!(parsedData.body && parsedData.body.trim()) ||
+        !!(parsedData.link && parsedData.link.trim()) ||
+        !!(parsedData.pollOptions && parsedData.pollOptions.some(opt => opt.text.trim())) ||
+        !!parsedData.flair ||
+        !!(parsedData.tags && parsedData.tags.length) ||
+        !!(parsedData.notes && parsedData.notes.trim())
+
+      if (!hasContent) {
+        console.warn('[QuickSave] No content detected in form; aborting save')
+        toast.error('No content detected to save')
         return
       }
 
@@ -78,7 +103,12 @@ export default function QuickSave({ onSave }: QuickSaveProps) {
         flair: parsedData.flair
       })
 
-      toast.success(`Draft "${draft.title}" saved successfully!`)
+      // Notify popup to refresh
+      chrome.runtime.sendMessage({ type: 'DRAFT_SAVED' }).catch(() => {
+        // Popup might not be open, that's okay
+      })
+
+      toast.success(`Draft "${draft.title || 'Untitled'}" saved successfully!`)
       onSave?.(draft)
     } catch (error) {
       console.error('[QuickSave] Failed to save draft:', error)

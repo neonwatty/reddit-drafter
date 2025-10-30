@@ -9,9 +9,27 @@ export const SH_REDDIT_SELECTORS = {
   form: 'form',
 
   // Basic fields - PLACEHOLDER
-  title: 'input[name="title"], textarea[name="title"]',
-  text: 'textarea[name="text"], div[contenteditable="true"]',
-  url: 'input[name="url"]',
+  title: [
+    'input[name="title"]',
+    'textarea[name="title"]',
+    'textarea[placeholder*="Title"]',
+    'textarea[data-testid="post-submission-title-input"]',
+    '[data-testid="post-title"] textarea',
+    'textarea[data-testid="shreddit-post-title"]',
+  ].join(', '),
+  text: [
+    'textarea[name="text"]',
+    'div[contenteditable="true"]',
+    'div[data-testid="post-content"] div[contenteditable="true"]',
+    '[data-testid="shreddit-post-content"] div[contenteditable="true"]',
+    'textarea[data-testid="shreddit-textarea"]',
+  ].join(', '),
+  url: [
+    'input[name="url"]',
+    'input[data-testid="post-url-input"]',
+    'input[data-testid="shreddit-post-url"]',
+    'input[placeholder*="https://"]',
+  ].join(', '),
   subreddit: 'input[name="sr"]',
 
   // Post type tabs - PLACEHOLDER

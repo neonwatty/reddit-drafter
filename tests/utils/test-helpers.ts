@@ -1,10 +1,14 @@
 import { Page } from '@playwright/test'
 import type { RedditDraft } from '@/lib/types'
+import { injectChromeMock } from './chrome-mock'
 
 /**
  * Navigate to the popup and wait for it to be ready
  */
 export async function navigateToPopup(page: Page): Promise<void> {
+  // Inject chrome API mock before navigation
+  await page.addInitScript(injectChromeMock)
+
   await page.goto('/src/popup/index.html')
   await page.waitForSelector('text=Reddit Drafter', { timeout: 5000 })
   // Wait for storage to initialize
@@ -12,131 +16,60 @@ export async function navigateToPopup(page: Page): Promise<void> {
 }
 
 /**
- * Clear IndexedDB storage (run in page context)
+ * Clear chrome.storage.local (run in page context)
  */
 export async function clearStorage(page: Page): Promise<void> {
   await page.evaluate(async () => {
-    const dbs = await window.indexedDB.databases()
-    const deletePromises = dbs.map((db) => {
-      if (db.name) {
-        return new Promise<void>((resolve, reject) => {
-          const request = window.indexedDB.deleteDatabase(db.name)
-          request.onsuccess = () => resolve()
-          request.onerror = () => reject(request.error)
-          request.onblocked = () => {
-            // If blocked, resolve anyway after a timeout
-            setTimeout(() => resolve(), 1000)
-          }
-        })
-      }
-      return Promise.resolve()
-    })
-    await Promise.all(deletePromises)
+    await chrome.storage.local.clear()
+    // Also clear the mock's sessionStorage persistence
+    sessionStorage.removeItem('__chrome_storage_mock__')
   })
   // Additional wait to ensure deletion is fully complete
   await page.waitForTimeout(200)
 }
 
 /**
- * Add a draft to storage programmatically using native IndexedDB API
+ * Add a draft to storage programmatically using chrome.storage.local API
  */
 export async function addDraftToStorage(page: Page, draft: RedditDraft): Promise<void> {
   await page.evaluate(async (draftData) => {
-    return new Promise<void>((resolve, reject) => {
-      // Open without version to use existing database version
-      const request = window.indexedDB.open('RedditDrafterDB')
+    // Get current drafts
+    const result = await chrome.storage.local.get('drafts')
+    const drafts = result.drafts || {}
 
-      request.onerror = () => reject(request.error)
+    // Add new draft
+    drafts[draftData.id] = draftData
 
-      request.onsuccess = () => {
-        const db = request.result
-
-        // Check if drafts store exists, if not the database needs to be initialized
-        if (!db.objectStoreNames.contains('drafts')) {
-          db.close()
-          reject(new Error('Database not initialized. Run clearStorage() and reload first.'))
-          return
-        }
-
-        const transaction = db.transaction(['drafts'], 'readwrite')
-        const store = transaction.objectStore('drafts')
-        const addRequest = store.add(draftData)
-
-        addRequest.onerror = () => reject(addRequest.error)
-        addRequest.onsuccess = () => {
-          db.close()
-          resolve()
-        }
-      }
-    })
+    // Save back to storage
+    await chrome.storage.local.set({ drafts })
   }, draft)
 }
 
 /**
- * Add media to storage programmatically using native IndexedDB API
+ * Add media to storage programmatically using chrome.storage.local API
  */
 export async function addMediaToStorage(page: Page, media: any): Promise<void> {
   await page.evaluate(async (mediaData) => {
-    return new Promise<void>((resolve, reject) => {
-      const request = window.indexedDB.open('RedditDrafterDB')
+    // Get current media
+    const result = await chrome.storage.local.get('media')
+    const mediaFiles = result.media || {}
 
-      request.onerror = () => reject(request.error)
+    // Add new media
+    mediaFiles[mediaData.id] = mediaData
 
-      request.onsuccess = () => {
-        const db = request.result
-
-        if (!db.objectStoreNames.contains('media')) {
-          db.close()
-          reject(new Error('Database not initialized. Run clearStorage() and reload first.'))
-          return
-        }
-
-        const transaction = db.transaction(['media'], 'readwrite')
-        const store = transaction.objectStore('media')
-        const addRequest = store.add(mediaData)
-
-        addRequest.onerror = () => reject(addRequest.error)
-        addRequest.onsuccess = () => {
-          db.close()
-          resolve()
-        }
-      }
-    })
+    // Save back to storage
+    await chrome.storage.local.set({ media: mediaFiles })
   }, media)
 }
 
 /**
- * Get all drafts from storage using native IndexedDB API
+ * Get all drafts from storage using chrome.storage.local API
  */
 export async function getAllDraftsFromStorage(page: Page): Promise<RedditDraft[]> {
   return await page.evaluate(async () => {
-    return new Promise<any[]>((resolve, reject) => {
-      // Open without version to use existing database version
-      const request = window.indexedDB.open('RedditDrafterDB')
-
-      request.onerror = () => reject(request.error)
-
-      request.onsuccess = () => {
-        const db = request.result
-
-        // Check if drafts store exists
-        if (!db.objectStoreNames.contains('drafts')) {
-          db.close()
-          resolve([])
-          return
-        }
-
-        const transaction = db.transaction(['drafts'], 'readonly')
-        const store = transaction.objectStore('drafts')
-        const getAllRequest = store.getAll()
-
-        getAllRequest.onerror = () => reject(getAllRequest.error)
-        getAllRequest.onsuccess = () => {
-          db.close()
-          resolve(getAllRequest.result)
-        }
-      }
-    })
+    const result = await chrome.storage.local.get('drafts')
+    const drafts = result.drafts || {}
+    return Object.values(drafts)
   })
 }
 
@@ -246,7 +179,16 @@ export async function switchTab(page: Page, tab: 'All' | 'Favorites'): Promise<v
  * Wait for toast notification
  */
 export async function waitForToast(page: Page, message: string): Promise<void> {
-  await page.waitForSelector(`text=${message}`, { timeout: 5000 })
+  await page.waitForFunction(
+    (msg) => {
+      const toasts = document.querySelectorAll('[data-sonner-toast]')
+      return Array.from(toasts).some((toast) =>
+        toast.textContent?.includes(msg)
+      )
+    },
+    message,
+    { timeout: 5000 }
+  )
 }
 
 /**

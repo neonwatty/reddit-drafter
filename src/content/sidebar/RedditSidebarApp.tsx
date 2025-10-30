@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { FileText, X } from 'lucide-react'
-import { Toaster } from 'sonner'
 import QuickSave from './QuickSave'
 import RecentDrafts from './RecentDrafts'
 import { initStorage } from '@/lib/storage/db'
+import { listDrafts } from '@/lib/storage/drafts'
 
 export default function RedditSidebarApp() {
   const [open, setOpen] = useState(false)
   const [storageReady, setStorageReady] = useState(false)
+  const [draftCount, setDraftCount] = useState(0)
+  const [refreshKey, setRefreshKey] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Initialize storage
@@ -19,6 +21,17 @@ export default function RedditSidebarApp() {
       console.log('[RedditSidebarApp] Storage initialized')
     })
   }, [])
+
+  // Fetch draft count
+  useEffect(() => {
+    if (storageReady) {
+      listDrafts().then((drafts) => {
+        setDraftCount(drafts.length)
+      }).catch((error) => {
+        console.error('[RedditSidebarApp] Failed to fetch drafts:', error)
+      })
+    }
+  }, [storageReady, open])
 
   // Keyboard shortcut: Ctrl+Shift+D
   useEffect(() => {
@@ -40,14 +53,21 @@ export default function RedditSidebarApp() {
   return (
     <div ref={containerRef}>
       {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6 z-[9999]">
+      <div className="fixed top-6 right-6 z-[9999]">
         <Button
           onClick={() => setOpen(!open)}
-          size="lg"
-          className="rounded-full w-14 h-14 shadow-lg hover:scale-110 transition-transform"
-          title="Toggle Reddit Drafter (Ctrl+Shift+D)"
+          className="rounded-full h-12 px-6 shadow-lg hover:scale-105 transition-all bg-[#FF4500] hover:bg-[#FF5722] text-white relative"
+          title="Open Reddit Drafter (Ctrl+Shift+D)"
         >
-          <FileText className="h-6 w-6" />
+          <FileText className="h-5 w-5 mr-2" />
+          <span className="font-semibold hidden sm:inline">Reddit Drafter</span>
+          <span className="font-semibold sm:hidden">Drafts</span>
+          {/* Draft count badge */}
+          {draftCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
+              {draftCount}
+            </span>
+          )}
         </Button>
       </div>
 
@@ -72,6 +92,9 @@ export default function RedditSidebarApp() {
                 <X className="h-4 w-4" />
               </Button>
             </div>
+            <SheetDescription className="sr-only">
+              Save and manage Reddit post drafts
+            </SheetDescription>
           </SheetHeader>
 
           {!storageReady ? (
@@ -84,18 +107,21 @@ export default function RedditSidebarApp() {
               <div>
                 <h3 className="text-sm font-semibold mb-3">Save Current Post</h3>
                 <QuickSave onSave={() => {
-                  // Refresh recent drafts after save
-                  // This will be handled automatically when we add state management
+                  // Refresh recent drafts by changing the key
+                  setRefreshKey(prev => prev + 1)
                 }} />
               </div>
 
               {/* Recent Drafts Section */}
               <div>
                 <h3 className="text-sm font-semibold mb-3">Recent Drafts</h3>
-                <RecentDrafts onLoad={() => {
-                  // Close sidebar after loading
-                  setOpen(false)
-                }} />
+                <RecentDrafts
+                  key={refreshKey}
+                  onLoad={() => {
+                    // Close sidebar after loading
+                    setOpen(false)
+                  }}
+                />
               </div>
 
               {/* Footer */}
@@ -108,9 +134,6 @@ export default function RedditSidebarApp() {
           )}
         </SheetContent>
       </Sheet>
-
-      {/* Toast notifications */}
-      <Toaster position="bottom-right" />
     </div>
   )
 }
