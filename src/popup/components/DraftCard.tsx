@@ -22,6 +22,7 @@ import {
   Trash2,
   Download,
   Copy,
+  FileDown,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import type { RedditDraft } from '@/lib/types'
@@ -33,6 +34,7 @@ interface DraftCardProps {
   onToggleFavorite?: (draft: RedditDraft) => void
   onExport?: (draft: RedditDraft) => void
   onDuplicate?: (draft: RedditDraft) => void
+  onLoad?: (draft: RedditDraft) => void
 }
 
 const POST_TYPE_ICONS = {
@@ -51,6 +53,7 @@ export default function DraftCard({
   onToggleFavorite,
   onExport,
   onDuplicate,
+  onLoad,
 }: DraftCardProps) {
   const [showFullBody, setShowFullBody] = useState(false)
 
@@ -152,6 +155,11 @@ export default function DraftCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onLoad?.(draft)}>
+              <FileDown className="mr-2 h-4 w-4" />
+              Load in Reddit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onEdit?.(draft)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit

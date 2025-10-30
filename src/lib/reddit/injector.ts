@@ -200,16 +200,61 @@ async function populateNewRedditForm(
     } else {
       // Fallback: try contenteditable div
       const contentEditableElements = searchInShadowDOM(document, SEL.text)
-      const ceDiv = contentEditableElements.find(el =>
-        el.tagName === 'DIV' && el.hasAttribute('contenteditable')
-      ) as HTMLElement | undefined
+
+      // Filter to find the actual editor div (usually has role="textbox" or specific class)
+      const editorDivs = contentEditableElements.filter(el => {
+        const hasContentEditable = el.hasAttribute('contenteditable') && el.getAttribute('contenteditable') === 'true'
+        const hasTextboxRole = el.getAttribute('role') === 'textbox'
+        const hasEditorClass = el.className?.includes('editor') || el.className?.includes('text')
+        return hasContentEditable && (hasTextboxRole || hasEditorClass || el.tagName === 'DIV')
+      }) as HTMLElement[]
+
+      // Try the largest contenteditable div (likely the main editor)
+      const ceDiv = editorDivs.sort((a, b) => {
+        const aSize = a.offsetHeight * a.offsetWidth
+        const bSize = b.offsetHeight * b.offsetWidth
+        return bSize - aSize
+      })[0]
 
       if (ceDiv) {
-        console.log('[populateNewRedditForm] Found body contenteditable div')
-        ceDiv.textContent = draft.body
-        ceDiv.dispatchEvent(new Event('input', { bubbles: true }))
+        console.log('[populateNewRedditForm] Found body contenteditable div, setting content...')
+
+        // Focus the element first
+        ceDiv.focus()
+
+        // Get the native setter for textContent to bypass React
+        const nativeTextContentSetter = Object.getOwnPropertyDescriptor(
+          window.HTMLElement.prototype,
+          'textContent'
+        )?.set
+
+        // Clear and set using native setter
+        if (nativeTextContentSetter) {
+          nativeTextContentSetter.call(ceDiv, draft.body)
+        } else {
+          ceDiv.textContent = draft.body
+        }
+
+        // Create a synthetic input event that React will recognize
+        const inputEvent = new Event('input', { bubbles: true })
+        const tracker = (ceDiv as any)._valueTracker
+        if (tracker) {
+          tracker.setValue('')
+        }
+        ceDiv.dispatchEvent(inputEvent)
+
+        // Also try dispatching as InputEvent with data
+        const inputEventWithData = new InputEvent('input', {
+          bubbles: true,
+          cancelable: false,
+          data: draft.body,
+          inputType: 'insertText'
+        })
+        ceDiv.dispatchEvent(inputEventWithData)
+
+        console.log('[populateNewRedditForm] Body contenteditable set, textContent length:', ceDiv.textContent?.length || 0)
       } else {
-        console.warn('[populateNewRedditForm] Body input not found')
+        console.warn('[populateNewRedditForm] Body input not found - neither textarea nor contenteditable')
       }
     }
   } else if (draft.postType === 'link' && draft.link) {
@@ -257,6 +302,30 @@ async function populateNewRedditForm(
 
   if (draft.oc) {
     toggleNewRedditButton(SEL.oc, true)
+  }
+
+  // Set flair if present
+  if (draft.flair && draft.flair.templateId) {
+    console.log('[populateNewRedditForm] Setting flair:', draft.flair)
+
+    // First, click the flair button to open the flair picker
+    const flairButton = document.querySelector(SEL.flairButton) as HTMLElement
+    if (flairButton) {
+      flairButton.click()
+
+      // Wait a bit for the flair picker to open, then select the flair
+      setTimeout(() => {
+        const flairOption = document.querySelector(`[data-flair-template-id="${draft.flair!.templateId}"]`) as HTMLElement
+        if (flairOption) {
+          flairOption.click()
+          console.log('[populateNewRedditForm] Flair selected')
+        } else {
+          console.warn('[populateNewRedditForm] Flair template not found:', draft.flair!.templateId)
+        }
+      }, 300)
+    } else {
+      console.warn('[populateNewRedditForm] Flair button not found')
+    }
   }
 
   return { success: true }
@@ -318,4 +387,64 @@ async function populateSHRedditForm(
       error: 'Failed to populate sh.reddit.com form. Selectors may need updating.'
     }
   }
+}
+
+/**
+ * Wait for Reddit form to be ready for injection
+ * Polls for form elements with exponential backoff
+ * @param maxWait Maximum time to wait in milliseconds (default 5000)
+ * @returns Promise that resolves to true when form is ready, false on timeout
+ */
+export async function waitForFormReady(maxWait = 5000): Promise<boolean> {
+  const variant = detectRedditVariant()
+  const startTime = Date.now()
+  let attempt = 0
+
+  console.log('[waitForFormReady] Waiting for form to be ready, variant:', variant)
+
+  while (Date.now() - startTime < maxWait) {
+    let formReady = false
+
+    try {
+      switch (variant) {
+        case 'old': {
+          // Check for title input in old Reddit
+          const titleInput = document.querySelector(OLD_REDDIT_SELECTORS.title)
+          formReady = !!titleInput
+          break
+        }
+        case 'new': {
+          // Check for title input in new Reddit (search shadow DOM)
+          const titleElements = searchInShadowDOM(document, 'textarea[name="title"], input[name="title"]')
+          formReady = titleElements.length > 0
+          break
+        }
+        case 'sh': {
+          // Check for title input in sh Reddit
+          const titleInput = document.querySelector(SH_REDDIT_SELECTORS.title)
+          formReady = !!titleInput
+          break
+        }
+        default:
+          console.warn('[waitForFormReady] Unknown variant, assuming not ready')
+          formReady = false
+      }
+    } catch (error) {
+      console.warn('[waitForFormReady] Error checking form:', error)
+      formReady = false
+    }
+
+    if (formReady) {
+      console.log('[waitForFormReady] Form ready after', Date.now() - startTime, 'ms')
+      return true
+    }
+
+    // Exponential backoff: 50ms, 100ms, 200ms, 400ms, then 400ms intervals
+    const waitTime = Math.min(50 * Math.pow(2, attempt), 400)
+    await new Promise(resolve => setTimeout(resolve, waitTime))
+    attempt++
+  }
+
+  console.warn('[waitForFormReady] Timeout after', maxWait, 'ms')
+  return false
 }
