@@ -146,15 +146,24 @@ test.describe('Command Palette', () => {
       const input = page.locator('[class*="command-palette-input"]')
       await input.fill('favorites')
 
+      // Wait for filtered results to appear and be selected
+      await page.waitForTimeout(300)
+
+      // Verify the command is visible
+      await expect(page.locator('text=View Favorites')).toBeVisible()
+
       // Press Enter to execute
       await page.keyboard.press('Enter')
 
-      // Wait for command to execute (match pattern of other command execution tests)
+      // Wait for command palette to close
+      await page.waitForSelector('.command-palette-overlay', { timeout: 2000, state: 'detached' })
+
+      // Wait for tab switch to complete
       await page.waitForTimeout(300)
 
       // Should be on Favorites tab (verify by checking active tab)
       const favoritesTab = page.locator('[role="tab"]:has-text("Favorites")')
-      await expect(favoritesTab).toHaveAttribute('aria-selected', 'true')
+      await expect(favoritesTab).toHaveAttribute('aria-selected', 'true', { timeout: 2000 })
     })
   })
 
