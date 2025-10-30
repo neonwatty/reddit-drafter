@@ -8,9 +8,38 @@ export const NEW_REDDIT_SELECTORS = {
   form: 'form',
 
   // Basic fields
-  title: 'textarea[name="title"], input[name="title"]',
-  text: 'textarea[placeholder*="Text"], div[contenteditable="true"][data-text-content]',
-  url: 'input[name="url"]',
+  title: [
+    'textarea[name="title"]',
+    'input[name="title"]',
+    'textarea[data-testid="post-submission-title-input"]',
+    'textarea[aria-label="Post title"]',
+    'textarea[placeholder*="Title"]',
+    'textarea[data-testid="shreddit-post-title"]',
+    '[data-testid="post-title"] textarea',
+    'div[data-testid="post-title"] textarea',
+    // New: contenteditable divs for title (2025 Reddit layout)
+    'div[contenteditable="true"]:not([aria-label])',
+    'div[contenteditable="true"][role="textbox"]:not([aria-label*="body"])',
+  ].join(', '),
+  text: [
+    'textarea[placeholder*="Text"]',
+    'div[contenteditable="true"][data-text-content]',
+    'textarea[data-testid="post-content-text"]',
+    'div[role="textbox"]',
+    'div[data-testid="richtext"] div[contenteditable="true"]',
+    'div[data-testid="post-content"] div[contenteditable="true"]',
+    '[data-testid="shreddit-post-content"] div[contenteditable="true"]',
+    'textarea[data-testid="shreddit-textarea"]',
+    // New: contenteditable with aria-label (2025 Reddit layout)
+    'div[contenteditable="true"][aria-label="Post body text field"]',
+    'div[contenteditable="true"][aria-label*="Body text field"]',
+  ].join(', '),
+  url: [
+    'input[name="url"]',
+    'input[data-testid="post-url-input"]',
+    'input[data-testid="shreddit-post-url"]',
+    'input[placeholder*="https://"]',
+  ].join(', '),
   subreddit: 'input[name="sr"], button[aria-label*="subreddit"]',
 
   // Post type tabs

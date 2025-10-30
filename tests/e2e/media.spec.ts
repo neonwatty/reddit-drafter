@@ -426,26 +426,9 @@ test.describe('Media Management', () => {
 
       // Verify media is also deleted from storage
       const mediaCount = await page.evaluate(async () => {
-        return new Promise<number>((resolve, reject) => {
-          const request = window.indexedDB.open('RedditDrafterDB')
-          request.onerror = () => reject(request.error)
-          request.onsuccess = () => {
-            const db = request.result
-            if (!db.objectStoreNames.contains('media')) {
-              db.close()
-              resolve(0)
-              return
-            }
-            const transaction = db.transaction(['media'], 'readonly')
-            const store = transaction.objectStore('media')
-            const countRequest = store.count()
-            countRequest.onerror = () => reject(countRequest.error)
-            countRequest.onsuccess = () => {
-              db.close()
-              resolve(countRequest.result)
-            }
-          }
-        })
+        const result = await chrome.storage.local.get('media')
+        const mediaFiles = result.media || {}
+        return Object.keys(mediaFiles).length
       })
 
       expect(mediaCount).toBe(0)

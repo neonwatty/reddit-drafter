@@ -1,5 +1,6 @@
 import { db } from './db'
 import type { RedditDraft, DraftFilters } from '../types'
+import type { Queryable } from './chrome-storage'
 import { v4 as uuid } from 'uuid'
 
 export async function createDraft(draft: Omit<RedditDraft, 'id' | 'createdAt' | 'updatedAt'>): Promise<RedditDraft> {
@@ -36,7 +37,7 @@ export async function deleteAllDrafts(): Promise<void> {
 }
 
 export async function listDrafts(filters?: DraftFilters): Promise<RedditDraft[]> {
-  let query = db.drafts.toCollection()
+  let query: Queryable<RedditDraft> = db.drafts.toCollection()
 
   // Apply indexed filters if provided
   if (filters?.subreddit) {

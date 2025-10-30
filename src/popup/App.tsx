@@ -59,6 +59,25 @@ function App() {
     })
   }, [])
 
+  // Listen for messages from content script (when drafts are saved from sidebar)
+  useEffect(() => {
+    if (!storageReady) return
+
+    const handleMessage = (message: any) => {
+      if (message.type === 'DRAFT_SAVED') {
+        console.log('[App] Draft saved, reloading drafts...')
+        loadDrafts()
+      }
+    }
+
+    // Listen for messages from content script
+    chrome.runtime.onMessage.addListener(handleMessage)
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(handleMessage)
+    }
+  }, [storageReady])
+
   // Load drafts
   const loadDrafts = async () => {
     setLoading(true)
@@ -392,7 +411,7 @@ function App() {
       />
 
       {/* Toaster */}
-      <Toaster position="bottom-center" />
+      <Toaster position="top-center" className="z-[9999]" />
     </div>
   )
 }

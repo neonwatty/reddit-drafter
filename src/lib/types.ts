@@ -97,19 +97,3 @@ export interface DraftFilters {
 
 // Reddit Variant Type
 export type RedditVariant = 'old' | 'new' | 'sh' | 'unknown'
-
-// Storage Type
-type StorageType = 'indexeddb' | 'chrome-storage'
-
-// Theme Type
-type Theme = 'light' | 'dark' | 'auto'
-
-// User Preferences
-interface UserPreferences {
-  theme: Theme
-  imageCompressionQuality: number  // 0-100
-  maxImageSizeBeforeCompression: number  // bytes
-  defaultTags: string[]
-  showNotifications: boolean
-  sidebarDefaultState: 'hidden' | 'visible'
-}

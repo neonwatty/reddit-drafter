@@ -144,6 +144,26 @@ async function populateOldRedditForm(
 }
 
 /**
+ * Helper function to search within Shadow DOM
+ */
+function searchInShadowDOM(root: Document | ShadowRoot, selector: string): Element[] {
+  const results: Element[] = []
+
+  // Search in current root
+  results.push(...Array.from(root.querySelectorAll(selector)))
+
+  // Search in all shadow roots
+  const allElements = root.querySelectorAll('*')
+  allElements.forEach(el => {
+    if (el.shadowRoot) {
+      results.push(...searchInShadowDOM(el.shadowRoot, selector))
+    }
+  })
+
+  return results
+}
+
+/**
  * Populate new.reddit.com form
  */
 async function populateNewRedditForm(
@@ -151,52 +171,78 @@ async function populateNewRedditForm(
 ): Promise<{ success: boolean; error?: string }> {
   const SEL = NEW_REDDIT_SELECTORS
 
-  // Set title
-  const titleInput = document.querySelector(SEL.title) as HTMLInputElement | HTMLTextAreaElement
+  console.log('[populateNewRedditForm] Loading draft:', { title: draft.title, body: draft.body?.substring(0, 50) })
+
+  // Set title - search in Shadow DOM
+  const titleElements = searchInShadowDOM(document, 'textarea[name="title"], input[name="title"]')
+  const titleInput = titleElements.find(el => el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') as HTMLInputElement | HTMLTextAreaElement | undefined
+
   if (titleInput) {
+    console.log('[populateNewRedditForm] Found title input:', titleInput.tagName)
     titleInput.value = draft.title
     titleInput.dispatchEvent(new Event('input', { bubbles: true }))
     titleInput.dispatchEvent(new Event('change', { bubbles: true }))
+  } else {
+    console.warn('[populateNewRedditForm] Title input not found')
   }
 
   // Set content based on post type
   if (draft.postType === 'text' && draft.body) {
-    const textInput = document.querySelector(SEL.text) as HTMLTextAreaElement | HTMLDivElement
+    // Search for body textarea in Shadow DOM
+    const bodyElements = searchInShadowDOM(document, 'textarea[placeholder*="Text"], textarea[name="text"]')
+    const textInput = bodyElements.find(el => el.tagName === 'TEXTAREA') as HTMLTextAreaElement | undefined
+
     if (textInput) {
-      if (textInput.tagName === 'TEXTAREA') {
-        (textInput as HTMLTextAreaElement).value = draft.body
-        textInput.dispatchEvent(new Event('input', { bubbles: true }))
+      console.log('[populateNewRedditForm] Found body textarea')
+      textInput.value = draft.body
+      textInput.dispatchEvent(new Event('input', { bubbles: true }))
+      textInput.dispatchEvent(new Event('change', { bubbles: true }))
+    } else {
+      // Fallback: try contenteditable div
+      const contentEditableElements = searchInShadowDOM(document, SEL.text)
+      const ceDiv = contentEditableElements.find(el =>
+        el.tagName === 'DIV' && el.hasAttribute('contenteditable')
+      ) as HTMLElement | undefined
+
+      if (ceDiv) {
+        console.log('[populateNewRedditForm] Found body contenteditable div')
+        ceDiv.textContent = draft.body
+        ceDiv.dispatchEvent(new Event('input', { bubbles: true }))
       } else {
-        // Contenteditable div
-        textInput.textContent = draft.body
-        textInput.dispatchEvent(new Event('input', { bubbles: true }))
+        console.warn('[populateNewRedditForm] Body input not found')
       }
     }
   } else if (draft.postType === 'link' && draft.link) {
-    const urlInput = document.querySelector(SEL.url) as HTMLInputElement
+    // Search for URL input in Shadow DOM
+    const urlElements = searchInShadowDOM(document, 'input[name="url"], input[placeholder*="https://"]')
+    const urlInput = urlElements.find(el => el.tagName === 'INPUT') as HTMLInputElement | undefined
+
     if (urlInput) {
+      console.log('[populateNewRedditForm] Found URL input')
       urlInput.value = draft.link
       urlInput.dispatchEvent(new Event('input', { bubbles: true }))
       urlInput.dispatchEvent(new Event('change', { bubbles: true }))
+    } else {
+      console.warn('[populateNewRedditForm] URL input not found')
     }
   } else if (draft.postType === 'poll' && draft.pollOptions) {
-    // Populate poll options
-    const pollInputs = document.querySelectorAll(SEL.pollOptionInputs)
+    // Populate poll options - search in Shadow DOM
+    const pollElements = searchInShadowDOM(document, 'input[name^="poll-option-"]')
     draft.pollOptions.forEach((option, index) => {
-      if (pollInputs[index]) {
-        const input = pollInputs[index] as HTMLInputElement
+      if (pollElements[index]) {
+        const input = pollElements[index] as HTMLInputElement
         input.value = option.text
         input.dispatchEvent(new Event('input', { bubbles: true }))
       }
     })
 
     // Set poll duration
-    if (draft.pollDuration) {
-      const durationSelect = document.querySelector(SEL.pollDurationSelect) as HTMLSelectElement
-      if (durationSelect) {
-        durationSelect.value = draft.pollDuration.toString()
-        durationSelect.dispatchEvent(new Event('change', { bubbles: true }))
-      }
+    const durationElements = searchInShadowDOM(document, 'select[name="poll-duration"]')
+    const durationSelect = durationElements[0] as HTMLSelectElement | undefined
+
+    if (durationSelect && draft.pollDuration) {
+      durationSelect.value = draft.pollDuration.toString()
+      durationSelect.dispatchEvent(new Event('change', { bubbles: true }))
     }
   }
 
