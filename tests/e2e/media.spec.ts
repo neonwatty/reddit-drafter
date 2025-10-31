@@ -57,7 +57,7 @@ test.describe('Media Management', () => {
     })
 
     test('should hide Media tab for Link post type', async ({ page }) => {
-      const draft = createMockDraft({ title: 'Link Post', postType: 'link', url: 'https://example.com' })
+      const draft = createMockDraft({ title: 'Link Post', postType: 'link', link: 'https://example.com' })
       await addDraftToStorage(page, draft)
 
       await page.reload()

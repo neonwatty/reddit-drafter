@@ -101,11 +101,45 @@ export function injectChromeMock() {
   // @ts-ignore
   window.chrome = {
     storage: {
-      local: chromeStorageLocal
+      local: chromeStorageLocal,
+      onChanged: {
+        addListener: () => {},
+        removeListener: () => {}
+      }
     },
     runtime: {
       sendMessage: () => Promise.resolve(),
       onMessage: {
+        addListener: () => {},
+        removeListener: () => {}
+      }
+    },
+    tabs: {
+      // Mock query - returns empty tab for popup testing
+      query: async () => {
+        return [{
+          id: 1,
+          url: 'about:blank',
+          active: true,
+          windowId: 1,
+          index: 0,
+          highlighted: false,
+          incognito: false,
+          pinned: false,
+          selected: false
+        }]
+      },
+      // Mock sendMessage - returns empty response
+      sendMessage: async () => {
+        return { success: false, error: 'Not on Reddit submit page' }
+      },
+      // Mock tab update listener
+      onUpdated: {
+        addListener: () => {},
+        removeListener: () => {}
+      },
+      // Mock tab activated listener
+      onActivated: {
         addListener: () => {},
         removeListener: () => {}
       }

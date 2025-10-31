@@ -101,6 +101,19 @@ export function createMockFavoriteDraft(overrides?: Partial<RedditDraft>): Reddi
 }
 
 /**
+ * Create a mock draft with flair
+ */
+export function createMockDraftWithFlair(
+  flair: { id: string; text: string; templateId?: string },
+  overrides?: Partial<RedditDraft>
+): RedditDraft {
+  return createMockDraft({
+    flair,
+    ...overrides,
+  })
+}
+
+/**
  * Create a mock media file
  */
 export function createMockMediaFile(draftId: string, overrides?: Partial<MediaFile>): MediaFile {
