@@ -215,7 +215,8 @@ function App() {
       }
 
       // Build submit URL for the draft's subreddit
-      const submitUrl = buildSubmitUrl(draft.subreddit, variant)
+      // Pass draft to include post type hints in URL (e.g., ?url=... for link posts)
+      const submitUrl = buildSubmitUrl(draft.subreddit, variant, draft)
 
       // Store draft ID to load after navigation
       await chrome.storage.local.set({ pendingDraftLoad: draft.id })

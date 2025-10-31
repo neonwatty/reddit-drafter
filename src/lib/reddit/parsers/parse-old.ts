@@ -1,11 +1,11 @@
-import type { RedditDraft } from '@/lib/types'
+import type { RedditDraft, ParsedFormData } from '@/lib/types'
 import { OLD_REDDIT_SELECTORS as SEL } from '../selectors/old-selectors'
 import { detectRedditUsername } from '../variant-detector'
 
 /**
  * Parse Reddit form data from old.reddit.com
  */
-export function parseOldRedditForm(): Partial<RedditDraft> {
+export async function parseOldRedditForm(): Promise<ParsedFormData> {
   const draft: Partial<RedditDraft> = {
     title: '',
     body: '',
@@ -77,7 +77,16 @@ export function parseOldRedditForm(): Partial<RedditDraft> {
     }
   }
 
-  return draft
+  // Note: Old Reddit has limited support for image/video posts
+  // Most images are submitted via the "link" tab with imgur/external URLs
+  // We'll attempt basic extraction but old Reddit typically doesn't store local uploads
+  let extractedMedia: File[] | undefined
+  // Extraction logic can be added here if needed in the future
+
+  return {
+    draft,
+    extractedMedia
+  }
 }
 
 /**

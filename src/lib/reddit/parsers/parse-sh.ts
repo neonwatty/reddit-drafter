@@ -1,4 +1,4 @@
-import type { RedditDraft } from '@/lib/types'
+import type { RedditDraft, ParsedFormData } from '@/lib/types'
 import { SH_REDDIT_SELECTORS as SEL } from '../selectors/sh-selectors'
 import { detectRedditUsername } from '../variant-detector'
 
@@ -10,7 +10,7 @@ import { detectRedditUsername } from '../variant-detector'
  *
  * TODO: Update selectors once sh.reddit.com is widely available
  */
-export function parseSHRedditForm(): Partial<RedditDraft> {
+export async function parseSHRedditForm(): Promise<ParsedFormData> {
   console.warn('[parseSHRedditForm] sh.reddit.com support is experimental. Selectors may need updating.')
 
   const draft: Partial<RedditDraft> = {
@@ -76,7 +76,13 @@ export function parseSHRedditForm(): Partial<RedditDraft> {
   // Return partial draft with warning
   console.warn('[parseSHRedditForm] Returning potentially incomplete data. Please test on actual sh.reddit.com and update selectors.')
 
-  return draft
+  // Image extraction for sh.reddit.com can be added when the platform is more stable
+  let extractedMedia: File[] | undefined
+
+  return {
+    draft,
+    extractedMedia
+  }
 }
 
 /**

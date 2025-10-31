@@ -103,7 +103,20 @@ interface MediaItemProps {
 
 function MediaItem({ media, onDelete }: MediaItemProps) {
   const isVideo = media.type.startsWith('video/')
-  const displayThumbnail = isVideo ? media.thumbnail : media.dataUrl
+  const isImage = media.type.startsWith('image/')
+
+  // Display logic: Use thumbnail if available (for both images and videos), fallback to full dataUrl
+  const displayThumbnail = media.thumbnail || media.dataUrl
+
+  // Debug logging for thumbnail display
+  console.log('[MediaItem] Displaying media:', {
+    name: media.name,
+    id: media.id,
+    hasThumbnail: !!media.thumbnail,
+    thumbnailLength: media.thumbnail ? media.thumbnail.length : 0,
+    hasDataUrl: !!media.dataUrl,
+    usingThumbnail: !!media.thumbnail
+  })
 
   return (
     <div className="flex items-start gap-3 p-2 border rounded-lg hover:bg-accent/50">
@@ -114,6 +127,7 @@ function MediaItem({ media, onDelete }: MediaItemProps) {
             src={displayThumbnail}
             alt={media.name}
             className="w-full h-full object-cover"
+            title={media.thumbnail ? "Thumbnail preview" : "Full image"}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -138,6 +152,12 @@ function MediaItem({ media, onDelete }: MediaItemProps) {
               <span className="text-xs text-muted-foreground">
                 {formatBytes(media.size)}
               </span>
+              {/* Show thumbnail indicator for images */}
+              {isImage && media.thumbnail && (
+                <Badge variant="secondary" className="text-xs">
+                  Thumbnail
+                </Badge>
+              )}
             </div>
           </div>
 

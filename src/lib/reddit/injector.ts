@@ -92,12 +92,89 @@ function checkFormHasContent(variant: string): boolean {
 }
 
 /**
+ * Switch to the appropriate post type tab based on draft post type
+ * This ensures the correct form fields are visible before population
+ */
+async function switchToPostTypeTab(
+  postType: string,
+  variant: 'old' | 'new' | 'sh'
+): Promise<void> {
+  console.log(`[switchToPostTypeTab] Switching to ${postType} tab for ${variant} Reddit`)
+
+  try {
+    let tabSelector: string | null = null
+
+    // Map post type to tab selector based on variant
+    if (variant === 'new') {
+      const tabMap: Record<string, string> = {
+        text: NEW_REDDIT_SELECTORS.tabPost,
+        link: NEW_REDDIT_SELECTORS.tabLink,
+        image: NEW_REDDIT_SELECTORS.tabImage,
+        video: NEW_REDDIT_SELECTORS.tabVideo,
+        poll: NEW_REDDIT_SELECTORS.tabPoll,
+        gallery: NEW_REDDIT_SELECTORS.tabImage, // Gallery uses image tab
+      }
+      tabSelector = tabMap[postType] || null
+    } else if (variant === 'old') {
+      const tabMap: Record<string, string> = {
+        text: OLD_REDDIT_SELECTORS.tabText,
+        link: OLD_REDDIT_SELECTORS.tabLink,
+      }
+      tabSelector = tabMap[postType] || null
+    } else if (variant === 'sh') {
+      // SH Reddit may use similar structure to new Reddit
+      // For now, skip tab switching for sh variant
+      console.log('[switchToPostTypeTab] Tab switching not implemented for sh.reddit.com')
+      return
+    }
+
+    if (!tabSelector) {
+      console.log(`[switchToPostTypeTab] No tab selector found for ${postType} on ${variant}`)
+      return
+    }
+
+    // Find and click the tab (search in Shadow DOM!)
+    const matchingTabs = searchInShadowDOM(document, tabSelector)
+    const tab = matchingTabs[0] as HTMLElement | undefined
+
+    if (tab) {
+      // Check if tab is already active
+      const isActive = tab.getAttribute('aria-selected') === 'true' ||
+                      tab.classList.contains('active') ||
+                      tab.classList.contains('selected')
+
+      if (!isActive) {
+        console.log(`[switchToPostTypeTab] Clicking ${postType} tab...`)
+        tab.click()
+
+        // Wait for tab switch animation/transition AND form re-render to complete
+        // Reddit re-renders the entire form when switching tabs, so we need to wait longer
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        const nowActive = tab.getAttribute('aria-selected') === 'true'
+        console.log(`[switchToPostTypeTab] Tab switched successfully (active: ${nowActive})`)
+      } else {
+        console.log(`[switchToPostTypeTab] ${postType} tab already active`)
+      }
+    } else {
+      console.warn(`[switchToPostTypeTab] Tab not found for ${postType} (selector: ${tabSelector})`)
+    }
+  } catch (error) {
+    console.error('[switchToPostTypeTab] Error switching tabs:', error)
+    // Don't throw - continue with form population even if tab switch fails
+  }
+}
+
+/**
  * Populate old.reddit.com form
  */
 async function populateOldRedditForm(
   draft: RedditDraft
 ): Promise<{ success: boolean; error?: string }> {
   const SEL = OLD_REDDIT_SELECTORS
+
+  // Switch to appropriate tab FIRST (before populating form)
+  await switchToPostTypeTab(draft.postType, 'old')
 
   // Set title
   const titleInput = document.querySelector(SEL.title) as HTMLTextAreaElement
@@ -173,6 +250,9 @@ async function populateNewRedditForm(
 
   console.log('[populateNewRedditForm] Loading draft:', { title: draft.title, body: draft.body?.substring(0, 50) })
 
+  // Switch to appropriate tab FIRST (before populating form)
+  await switchToPostTypeTab(draft.postType, 'new')
+
   // Set title - search in Shadow DOM
   const titleElements = searchInShadowDOM(document, 'textarea[name="title"], input[name="title"]')
   const titleInput = titleElements.find(el => el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') as HTMLInputElement | HTMLTextAreaElement | undefined
@@ -186,8 +266,8 @@ async function populateNewRedditForm(
     console.warn('[populateNewRedditForm] Title input not found')
   }
 
-  // Set content based on post type
-  if (draft.postType === 'text' && draft.body) {
+  // Set body text (Reddit allows body text on text, image, video, and gallery posts)
+  if (draft.body && ['text', 'image', 'video', 'gallery'].includes(draft.postType)) {
     // Search for body textarea in Shadow DOM
     const bodyElements = searchInShadowDOM(document, 'textarea[placeholder*="Text"], textarea[name="text"]')
     const textInput = bodyElements.find(el => el.tagName === 'TEXTAREA') as HTMLTextAreaElement | undefined
@@ -335,6 +415,9 @@ async function populateSHRedditForm(
   console.warn('[populateSHRedditForm] sh.reddit.com support is experimental')
 
   const SEL = SH_REDDIT_SELECTORS
+
+  // Switch to appropriate tab FIRST (before populating form)
+  await switchToPostTypeTab(draft.postType, 'sh')
 
   try {
     // Attempt to set title (placeholder)

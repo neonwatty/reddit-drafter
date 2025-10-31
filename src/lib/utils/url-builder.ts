@@ -8,9 +8,14 @@ export type RedditVariant = 'old' | 'new' | 'sh' | 'unknown'
  * Build a Reddit submit page URL for a given subreddit and variant
  * @param subreddit The subreddit name (without r/ prefix), or empty for universal submit
  * @param variant The Reddit variant (old/new/sh)
+ * @param draft Optional draft data to include post type hints in URL
  * @returns Complete submit page URL
  */
-export function buildSubmitUrl(subreddit: string, variant: RedditVariant = 'new'): string {
+export function buildSubmitUrl(
+  subreddit: string,
+  variant: RedditVariant = 'new',
+  draft?: { postType: string; link?: string }
+): string {
   const baseUrls: Record<RedditVariant, string> = {
     old: 'https://old.reddit.com',
     new: 'https://www.reddit.com',
@@ -20,14 +25,22 @@ export function buildSubmitUrl(subreddit: string, variant: RedditVariant = 'new'
 
   const base = baseUrls[variant]
 
+  let url: string
   if (subreddit && subreddit.trim()) {
     // Remove r/ prefix if present
     const cleanSubreddit = subreddit.replace(/^r\//, '').trim()
-    return `${base}/r/${cleanSubreddit}/submit`
+    url = `${base}/r/${cleanSubreddit}/submit`
   } else {
     // Universal submit page
-    return `${base}/submit`
+    url = `${base}/submit`
   }
+
+  // For link posts, add URL parameter to make Reddit auto-switch to link tab
+  if (draft?.postType === 'link' && draft.link) {
+    url += `?url=${encodeURIComponent(draft.link)}`
+  }
+
+  return url
 }
 
 /**

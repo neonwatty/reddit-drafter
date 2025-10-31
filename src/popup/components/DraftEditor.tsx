@@ -65,9 +65,43 @@ export default function DraftEditor({
     setMediaRefreshKey((key) => key + 1)
   }, [])
 
-  const handleMediaLoaded = useCallback((items: MediaFile[]) => {
-    setMediaCount(items.length)
-  }, [])
+  const handleMediaLoaded = useCallback(
+    (items: MediaFile[]) => {
+      setMediaCount(items.length)
+
+      // Update formData with current media IDs
+      if (items.length > 0) {
+        const mediaIds = items.map((m) => m.id)
+
+        // Update imageIds for gallery and image posts
+        if (
+          formData.postType === 'gallery' ||
+          (formData.postType === 'image' && items.length > 0)
+        ) {
+          setFormData((prev) => ({
+            ...prev,
+            imageIds: mediaIds,
+          }))
+        }
+
+        // Update videoId for video posts
+        if (formData.postType === 'video' && items.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            videoId: items[0].id,
+          }))
+        }
+      } else {
+        // Clear media IDs if no media
+        setFormData((prev) => ({
+          ...prev,
+          imageIds: undefined,
+          videoId: undefined,
+        }))
+      }
+    },
+    [formData.postType]
+  )
 
   const handleSave = async () => {
     if (!draft) return
@@ -145,12 +179,10 @@ export default function DraftEditor({
         </DialogHeader>
 
         <Tabs defaultValue="content" className="w-full">
-          <TabsList className={`grid w-full ${(formData.postType === 'image' || formData.postType === 'video' || formData.postType === 'gallery') ? 'grid-cols-4' : 'grid-cols-3'}`}>
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="metadata">Metadata</TabsTrigger>
-            {(formData.postType === 'image' || formData.postType === 'video' || formData.postType === 'gallery') && (
-              <TabsTrigger value="media">Media</TabsTrigger>
-            )}
+            <TabsTrigger value="media">Media</TabsTrigger>
             <TabsTrigger value="organization">Organization</TabsTrigger>
           </TabsList>
 
@@ -296,22 +328,23 @@ export default function DraftEditor({
 
           {/* Media Tab */}
           <TabsContent value="media" className="space-y-4">
+            {draft && (
+              <MediaGallery
+                draftId={draft.id}
+                refreshKey={mediaRefreshKey}
+                onMediaLoaded={handleMediaLoaded}
+              />
+            )}
+
             {(formData.postType === 'image' ||
               formData.postType === 'video' ||
               formData.postType === 'gallery') && draft && (
-              <>
-                <MediaGallery
-                  draftId={draft.id}
-                  refreshKey={mediaRefreshKey}
-                  onMediaLoaded={handleMediaLoaded}
-                />
-                <MediaUploader
-                  draftId={draft.id}
-                  postType={formData.postType as 'image' | 'video' | 'gallery'}
-                  existingMediaCount={mediaCount}
-                  onMediaAdded={refreshMedia}
-                />
-              </>
+              <MediaUploader
+                draftId={draft.id}
+                postType={formData.postType as 'image' | 'video' | 'gallery'}
+                existingMediaCount={mediaCount}
+                onMediaAdded={refreshMedia}
+              />
             )}
 
             {formData.postType !== 'image' &&
@@ -319,10 +352,10 @@ export default function DraftEditor({
               formData.postType !== 'gallery' && (
                 <div className="p-6 text-center text-muted-foreground">
                   <p className="text-sm">
-                    Media uploads are only available for Image, Video, and Gallery post types.
+                    Media uploads are available for Image, Video, and Gallery post types.
                   </p>
                   <p className="text-xs mt-2">
-                    Change the post type in the Content tab to enable media uploads.
+                    Change the post type in the Content tab to enable uploading new media.
                   </p>
                 </div>
               )}

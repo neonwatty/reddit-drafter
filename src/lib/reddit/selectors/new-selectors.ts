@@ -45,11 +45,11 @@ export const NEW_REDDIT_SELECTORS = {
   // Post type tabs
   tabList: '[role="tablist"]',
   activeTab: '[role="tab"][aria-selected="true"]',
-  tabPost: '[role="tab"][name="post"]',
-  tabImage: '[role="tab"][name="image"]',
-  tabLink: '[role="tab"][name="link"]',
-  tabVideo: '[role="tab"][name="video"]',
-  tabPoll: '[role="tab"][name="poll"]',
+  tabPost: '[role="tab"][data-select-value="TEXT"]',
+  tabImage: '[role="tab"][data-select-value="IMAGE"]',
+  tabLink: '[role="tab"][data-select-value="LINK"]',
+  tabVideo: '[role="tab"][data-select-value="VIDEO"]',
+  tabPoll: '[role="tab"][data-select-value="POLL"]',
 
   // Metadata toggles/checkboxes
   nsfw: 'input[name="nsfw"], button[aria-label*="NSFW"]',
@@ -75,6 +75,23 @@ export const NEW_REDDIT_SELECTORS = {
   fileInput: 'input[type="file"]',
   imageUploadButton: 'button[aria-label*="upload"]',
 
-  // Gallery
+  // Gallery and uploaded media
   galleryItems: '[data-gallery-item]',
+  uploadedImages: [
+    'img[src^="blob:"]',                           // Local preview before upload
+    'img[src^="data:image"]',                      // Base64 preview
+    'img[src*="i.redd.it"]',                       // FULL-SIZE IMAGE (primary - highest quality)
+    'img[src*="preview.redd.it"]',                 // Thumbnail (fallback only - low quality)
+    '[data-testid="media-upload-preview"] img',
+    '[data-testid="image-upload-preview"] img',
+    '[data-testid="gallery-item"] img',
+    '[class*="media-preview"] img',
+    '[class*="image-preview"] img',
+  ].join(', '),
+  uploadedVideos: [
+    'video[src^="blob:"]',
+    'video[src^="data:video"]',
+    '[data-testid="video-upload-preview"] video',
+    '[class*="video-preview"] video',
+  ].join(', '),
 } as const

@@ -97,3 +97,9 @@ export interface DraftFilters {
 
 // Reddit Variant Type
 export type RedditVariant = 'old' | 'new' | 'sh' | 'unknown'
+
+// Parsed Form Data (for extracting data from Reddit forms)
+export interface ParsedFormData {
+  draft: Partial<RedditDraft>
+  extractedMedia?: File[]  // Images/videos extracted from the Reddit form
+}

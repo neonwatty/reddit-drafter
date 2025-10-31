@@ -1,11 +1,32 @@
-import type { RedditDraft, PollOption } from '@/lib/types'
+import type { RedditDraft, PollOption, ParsedFormData } from '@/lib/types'
 import { NEW_REDDIT_SELECTORS as SEL } from '../selectors/new-selectors'
 import { detectRedditUsername } from '../variant-detector'
 
 /**
+ * Helper function to search within Shadow DOM
+ */
+function searchInShadowDOM(root: Document | ShadowRoot, selector: string): Element[] {
+  const results: Element[] = []
+
+  // Search in current root
+  results.push(...Array.from(root.querySelectorAll(selector)))
+
+  // Search in all shadow roots
+  const allElements = root.querySelectorAll('*')
+  allElements.forEach(el => {
+    if (el.shadowRoot) {
+      console.log('[searchInShadowDOM] Found Shadow DOM in:', el.tagName)
+      results.push(...searchInShadowDOM(el.shadowRoot, selector))
+    }
+  })
+
+  return results
+}
+
+/**
  * Parse Reddit form data from new.reddit.com (www.reddit.com)
  */
-export function parseNewRedditForm(): Partial<RedditDraft> {
+export async function parseNewRedditForm(): Promise<ParsedFormData> {
   const draft: Partial<RedditDraft> = {
     title: '',
     body: '',
@@ -24,25 +45,6 @@ export function parseNewRedditForm(): Partial<RedditDraft> {
 
   // Get title - Search for actual user input
   console.log('[parseNewRedditForm] === SEARCHING FOR USER INPUT ===')
-
-  // Helper function to search within Shadow DOM
-  function searchInShadowDOM(root: Document | ShadowRoot, selector: string): Element[] {
-    const results: Element[] = []
-
-    // Search in current root
-    results.push(...Array.from(root.querySelectorAll(selector)))
-
-    // Search in all shadow roots
-    const allElements = root.querySelectorAll('*')
-    allElements.forEach(el => {
-      if (el.shadowRoot) {
-        console.log('[parseNewRedditForm] Found Shadow DOM in:', el.tagName)
-        results.push(...searchInShadowDOM(el.shadowRoot, selector))
-      }
-    })
-
-    return results
-  }
 
   // Search for ALL input and textarea elements (including Shadow DOM)
   const allInputs = searchInShadowDOM(document, 'input[type="text"], textarea, div[contenteditable="true"]')
@@ -276,8 +278,8 @@ export function parseNewRedditForm(): Partial<RedditDraft> {
     case 'image':
     case 'video':
     case 'gallery':
-      // Media handling will be done in Phase 5
-      // For now, just mark the type
+      // Extract images/videos from the DOM
+      // Media files will be extracted and returned separately
       break
   }
 
@@ -322,18 +324,77 @@ export function parseNewRedditForm(): Partial<RedditDraft> {
     }
   }
 
-  return draft
+  // Extract media files if this is an image/video/gallery post
+  let extractedMedia: File[] | undefined
+  if (draft.postType === 'image' || draft.postType === 'video' || draft.postType === 'gallery') {
+    extractedMedia = await extractMediaFromForm(draft.postType)
+  }
+
+  return {
+    draft,
+    extractedMedia
+  }
+}
+
+/**
+ * Detect if media has been uploaded by checking DOM content
+ * This is more reliable than tab detection alone
+ */
+function detectUploadedMediaType(): 'image' | 'video' | 'gallery' | null {
+  // Search for uploaded images and videos (including Shadow DOM)
+  const images = searchInShadowDOM(document, SEL.uploadedImages)
+  const videos = searchInShadowDOM(document, SEL.uploadedVideos)
+
+  console.log('[detectUploadedMediaType] Found images:', images.length, 'videos:', videos.length)
+
+  if (videos.length > 0) return 'video'
+  if (images.length > 1) return 'gallery'
+  if (images.length === 1) return 'image'
+
+  return null
 }
 
 /**
  * Detect post type from active tab in new Reddit
+ * Enhanced with content-first detection
  */
 function detectNewRedditPostType(): RedditDraft['postType'] {
+  console.log('[detectNewRedditPostType] === POST TYPE DETECTION ===')
+
+  // PRIORITY 1: Check for uploaded media in DOM (most reliable)
+  const uploadedMediaType = detectUploadedMediaType()
+  if (uploadedMediaType) {
+    console.log('[detectNewRedditPostType] Detected from uploaded media:', uploadedMediaType)
+    return uploadedMediaType
+  }
+
+  // PRIORITY 2: Check file input state
+  const fileInput = document.querySelector(SEL.fileInput) as HTMLInputElement
+  if (fileInput?.files && fileInput.files.length > 0) {
+    console.log('[detectNewRedditPostType] File input has', fileInput.files.length, 'files')
+
+    const hasVideo = Array.from(fileInput.files).some(f => f.type.startsWith('video/'))
+    if (hasVideo) {
+      console.log('[detectNewRedditPostType] Detected from file input: video')
+      return 'video'
+    }
+
+    const type = fileInput.files.length > 1 ? 'gallery' : 'image'
+    console.log('[detectNewRedditPostType] Detected from file input:', type)
+    return type
+  }
+
+  // PRIORITY 3: Fall back to tab detection
   const activeTab = document.querySelector(SEL.activeTab)
-  if (!activeTab) return 'text'
+  if (!activeTab) {
+    console.warn('[detectNewRedditPostType] No active tab found, defaulting to text')
+    return 'text'
+  }
 
   const tabText = activeTab.textContent?.toLowerCase() || ''
   const tabName = activeTab.getAttribute('name')?.toLowerCase() || ''
+
+  console.log('[detectNewRedditPostType] Tab detection:', { tabText, tabName })
 
   if (tabText.includes('image') || tabName === 'image') return 'image'
   if (tabText.includes('video') || tabName === 'video') return 'video'
@@ -341,6 +402,7 @@ function detectNewRedditPostType(): RedditDraft['postType'] {
   if (tabText.includes('poll') || tabName === 'poll') return 'poll'
   if (tabText.includes('gallery')) return 'gallery'
 
+  console.log('[detectNewRedditPostType] Defaulting to text')
   return 'text'
 }
 
@@ -414,4 +476,187 @@ export function checkNewRedditFormHasContent(): boolean {
   }
 
   return hasTitle || hasText || hasUrl
+}
+
+/**
+ * Extract media files from the Reddit form
+ */
+async function extractMediaFromForm(postType: 'image' | 'video' | 'gallery'): Promise<File[]> {
+  const extractedFiles: File[] = []
+
+  try {
+    if (postType === 'video') {
+      // Extract video (search including Shadow DOM)
+      const videoElements = searchInShadowDOM(document, SEL.uploadedVideos) as HTMLVideoElement[]
+      console.log('[extractMediaFromForm] Found', videoElements.length, 'video elements')
+
+      for (let i = 0; i < videoElements.length; i++) {
+        const video = videoElements[i]
+        if (video.src) {
+          try {
+            const file = await fetchMediaAsFile(video.src, `video_${i}.mp4`, 'video/mp4')
+            extractedFiles.push(file)
+            console.log('[extractMediaFromForm] Extracted video:', file.name, file.size)
+          } catch (error) {
+            console.warn('[extractMediaFromForm] Failed to extract video:', error)
+          }
+        }
+      }
+    } else {
+      // Extract images (image or gallery, search including Shadow DOM)
+      const imageElements = searchInShadowDOM(document, SEL.uploadedImages) as HTMLImageElement[]
+      console.log('[extractMediaFromForm] Found', imageElements.length, 'image elements')
+
+      // Deduplicate by CDN preference: prefer i.redd.it (full-size) over preview.redd.it (thumbnails)
+      // Reddit serves multiple versions of each image:
+      // - i.redd.it: Full-size, high quality (~492KB .jpg)
+      // - preview.redd.it: Thumbnail, low quality (~31KB .png)
+
+      const fullSizeImages: HTMLImageElement[] = []
+      const previewImages: HTMLImageElement[] = []
+      const otherImages: HTMLImageElement[] = []
+      const seenSrcs = new Set<string>()
+
+      for (const img of imageElements) {
+        if (!img.src || seenSrcs.has(img.src)) continue
+
+        seenSrcs.add(img.src)
+
+        // Log each image for debugging
+        const srcPreview = img.src.substring(0, 80)
+        const width = img.naturalWidth || img.width || 0
+        const height = img.naturalHeight || img.height || 0
+        console.log('[extractMediaFromForm] Image src:', srcPreview,
+                    'naturalWidth:', width, 'naturalHeight:', height)
+
+        // Categorize based on URL AND dimensions
+        // Small images (< 300px) are thumbnails regardless of CDN
+        const isSmall = width < 300 || height < 300
+
+        if (img.src.includes('preview.redd.it')) {
+          // preview.redd.it is always thumbnails
+          previewImages.push(img)
+          console.log('[extractMediaFromForm] → Categorized as PREVIEW (preview.redd.it)')
+        } else if (img.src.includes('i.redd.it') && isSmall) {
+          // i.redd.it with small dimensions = thumbnail
+          previewImages.push(img)
+          console.log('[extractMediaFromForm] → Categorized as PREVIEW (i.redd.it small)')
+        } else if (img.src.includes('i.redd.it')) {
+          // i.redd.it with large dimensions = full-size
+          fullSizeImages.push(img)
+          console.log('[extractMediaFromForm] → Categorized as FULL-SIZE (i.redd.it large)')
+        } else {
+          // blob:, data:, or other CDNs
+          otherImages.push(img)
+          console.log('[extractMediaFromForm] → Categorized as OTHER (blob/data)')
+        }
+      }
+
+      // Build paired list: match full-size images with their thumbnail counterparts
+      // Strategy: Match by index position (Reddit displays them in same order)
+      const pairedImages: Array<{ fullSize: HTMLImageElement | null; thumbnail: HTMLImageElement | null }> = []
+
+      if (fullSizeImages.length > 0) {
+        // We have full-size images (upload complete) - pair them with thumbnails
+        for (let i = 0; i < fullSizeImages.length; i++) {
+          pairedImages.push({
+            fullSize: fullSizeImages[i],
+            thumbnail: previewImages[i] || null
+          })
+        }
+      } else if (otherImages.length > 0) {
+        // We have blob/data URLs (upload in progress) - no thumbnails available yet
+        for (const img of otherImages) {
+          pairedImages.push({
+            fullSize: img,
+            thumbnail: null
+          })
+        }
+      } else {
+        // Last resort: only preview thumbnails available
+        for (const img of previewImages) {
+          pairedImages.push({
+            fullSize: img,
+            thumbnail: null
+          })
+        }
+      }
+
+      console.log('[extractMediaFromForm] Found', imageElements.length, 'elements →',
+                  fullSizeImages.length, 'full-size,',
+                  previewImages.length, 'previews,',
+                  otherImages.length, 'other →',
+                  pairedImages.length, 'paired images (',
+                  pairedImages.filter(p => p.thumbnail).length, 'with thumbnails)')
+
+      for (let i = 0; i < pairedImages.length; i++) {
+        const pair = pairedImages[i]
+
+        if (!pair.fullSize) {
+          console.warn('[extractMediaFromForm] No full-size image at index', i)
+          continue
+        }
+
+        try {
+          // Determine file type from src or default to jpeg
+          let mimeType = 'image/jpeg'
+          let extension = 'jpg'
+
+          if (pair.fullSize.src.startsWith('data:')) {
+            // Extract MIME type from data URL
+            const match = pair.fullSize.src.match(/^data:(image\/\w+);/)
+            if (match) {
+              mimeType = match[1]
+              extension = mimeType.split('/')[1]
+            }
+          } else if (pair.fullSize.src.includes('.png')) {
+            mimeType = 'image/png'
+            extension = 'png'
+          } else if (pair.fullSize.src.includes('.gif')) {
+            mimeType = 'image/gif'
+            extension = 'gif'
+          } else if (pair.fullSize.src.includes('.webp')) {
+            mimeType = 'image/webp'
+            extension = 'webp'
+          }
+
+          const file = await fetchMediaAsFile(pair.fullSize.src, `image_${i}.${extension}`, mimeType)
+
+          // Store thumbnail URL as metadata on File object for content script to use
+          if (pair.thumbnail) {
+            (file as any).__thumbnailSrc = pair.thumbnail.src
+          }
+
+          extractedFiles.push(file)
+          console.log('[extractMediaFromForm] Extracted image:', file.name, file.size,
+                      'with thumbnail:', !!pair.thumbnail)
+        } catch (error) {
+          console.warn('[extractMediaFromForm] Failed to extract image:', error)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('[extractMediaFromForm] Media extraction failed:', error)
+  }
+
+  console.log('[extractMediaFromForm] Total extracted files:', extractedFiles.length)
+  return extractedFiles
+}
+
+/**
+ * Fetch media from URL and convert to File
+ */
+async function fetchMediaAsFile(url: string, filename: string, mimeType: string): Promise<File> {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch: ${response.statusText}`)
+    }
+
+    const blob = await response.blob()
+    return new File([blob], filename, { type: mimeType })
+  } catch (error) {
+    console.error('[fetchMediaAsFile] Failed to fetch media:', url, error)
+    throw error
+  }
 }
